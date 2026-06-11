@@ -13,54 +13,62 @@
         <h1>Agent financier vocal</h1>
       </div>
       <p class="sous-titre">
-        Aide a la decision en direct pour vos rencontres &middot; francais quebecois
+        Detection automatique des sujets &middot; information verifiee sur demande &middot; francais quebecois
       </p>
     </header>
 
+    <!-- Bloc ecoute + transcription (pleine largeur) -->
+    <section class="carte carte-pleine">
+      <div class="carte-entete">
+        <h2>1. Ecoute de la rencontre</h2>
+        <span id="etat-ecoute" class="badge badge-gris">Arrete</span>
+      </div>
+      <div class="boutons">
+        <button id="btn-ecoute" class="btn btn-principal">
+          <span class="ico">&#127908;</span> Demarrer l'ecoute
+        </button>
+        <button id="btn-effacer" class="btn btn-secondaire">Effacer</button>
+      </div>
+      <label class="etiquette" for="transcription">
+        Transcription en direct (modifiable &mdash; corrigez au besoin)
+      </label>
+      <textarea
+        id="transcription"
+        class="transcription"
+        placeholder="La transcription de la rencontre s'ecrit ici automatiquement pendant que vous parlez. Vous pouvez aussi taper ou coller du texte."
+      ></textarea>
+      <p id="apercu-temps-reel" class="apercu"></p>
+      <p id="message-erreur" class="erreur" hidden></p>
+    </section>
+
     <main class="grille">
-      <!-- Colonne gauche : ecoute + transcription -->
+      <!-- Sujets detectes -->
       <section class="carte">
         <div class="carte-entete">
-          <h2>1. Ecoute de la rencontre</h2>
-          <span id="etat-ecoute" class="badge badge-gris">Arrete</span>
+          <h2>2. Sujets detectes</h2>
+          <button id="btn-detecter" class="btn btn-mini">&#128269; Detecter</button>
         </div>
-
-        <div class="boutons">
-          <button id="btn-ecoute" class="btn btn-principal">
-            <span class="ico">&#127908;</span> Demarrer l'ecoute
-          </button>
-          <button id="btn-effacer" class="btn btn-secondaire">Effacer</button>
+        <p class="indice">
+          Les sujets abordes apparaissent ici automatiquement. Cliquez sur
+          <strong>Generer</strong> a cote d'un sujet pour obtenir l'information.
+        </p>
+        <div id="liste-sujets" class="liste-sujets">
+          <div class="vide-mini">Aucun sujet detecte pour l'instant&hellip;</div>
         </div>
-
-        <label class="etiquette" for="transcription">
-          Transcription (modifiable &mdash; corrigez au besoin)
-        </label>
-        <textarea
-          id="transcription"
-          class="transcription"
-          placeholder="La transcription de la rencontre apparaitra ici. Vous pouvez aussi taper ou coller du texte manuellement."
-        ></textarea>
-        <p id="apercu-temps-reel" class="apercu"></p>
-
-        <button id="btn-executer" class="btn btn-action">
-          <span class="ico">&#9889;</span> Executer l'analyse
-        </button>
-
-        <p id="message-erreur" class="erreur" hidden></p>
       </section>
 
-      <!-- Colonne droite : analyse -->
+      <!-- Information generee -->
       <section class="carte">
         <div class="carte-entete">
-          <h2>2. Analyse</h2>
+          <h2 id="titre-info">3. Information</h2>
           <span id="statut-analyse" class="badge badge-gris">En attente</span>
         </div>
         <div id="resultat" class="resultat">
           <div class="vide">
             <p>
-              Cliquez sur <strong>Executer l'analyse</strong> pour obtenir le
-              sujet detecte, les questions du client, une reponse verifiee avec
-              sources, des questions a poser et des directions optimales.
+              Choisissez un sujet detecte et cliquez sur <strong>Generer</strong>.
+              Vous obtiendrez une reponse verifiee avec sources, des questions a
+              poser et des directions optimales pour ce sujet.
             </p>
           </div>
         </div>
@@ -69,10 +77,10 @@
 
     <footer class="pied">
       <p>
-        <strong>Important :</strong> outil d'aide a la decision. Les informations
-        doivent toujours etre validees a leurs sources officielles. Sur les
-        sujets fiscaux et juridiques pointus, consultez un fiscaliste, CPA ou
-        notaire avant de conseiller le client.
+        <strong>Important :</strong> outil d'aide a la decision. Validez toujours
+        l'information a ses sources officielles. Sur les sujets fiscaux et
+        juridiques pointus, consultez un fiscaliste, CPA ou notaire avant de
+        conseiller le client.
       </p>
     </footer>
 

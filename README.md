@@ -2,13 +2,13 @@
 
 Assistant d'aide à la décision **en direct** pour vos rencontres financières en **français québécois**.
 
-Il **écoute** la rencontre (visioconférence ou en personne), et **quand vous cliquez sur « Exécuter »**, il vous donne :
+Il **écoute** la rencontre (la transcription s'écrit automatiquement), **détecte tout seul les sujets** abordés (ex. « gel successoral », « fiscalité entreprise agricole »), et affiche **un bouton « Générer » à côté de chaque sujet**. Quand vous cliquez, il produit pour ce sujet :
 
-1. **Le sujet détecté** de la rencontre et la direction qu'elle prend
-2. **Les questions du client** (explicites ou implicites)
-3. **Une réponse vérifiée** avec sources officielles et niveau de certitude
-4. **Des questions pertinentes** à poser au client
-5. **Des directions optimales** à prendre
+1. **Une réponse vérifiée** avec sources officielles et niveau de certitude
+2. **Des questions pertinentes** à poser au client
+3. **Des directions optimales** à prendre
+
+Vous ne générez de l'information que **lorsque vous le décidez**, sujet par sujet.
 
 L'agent combine l'intelligence de **Claude (Opus 4.8)** avec une **recherche web** sur des sources officielles (Revenu Québec, ARC, AMF, Retraite Québec, etc.) afin que l'information soit à jour et vérifiable.
 
@@ -64,9 +64,9 @@ http://localhost:3000
 ### Pendant une rencontre
 
 1. Cliquez sur **« Démarrer l'écoute »** et autorisez le microphone.
-2. La transcription s'accumule à gauche (vous pouvez la corriger à la main).
-3. Quand vous voulez de l'information, cliquez sur **« Exécuter l'analyse »**.
-4. L'analyse s'affiche à droite, en direct, avec ses sources.
+2. La transcription s'écrit **automatiquement** en haut (vous pouvez la corriger à la main).
+3. Les **sujets détectés** apparaissent tout seuls dans la colonne de gauche (bouton **« Détecter »** pour forcer une détection immédiate).
+4. Cliquez sur **« Générer »** à côté d'un sujet → l'information vérifiée s'affiche à droite, en direct, avec ses sources.
 
 ---
 
@@ -85,8 +85,10 @@ Cette approche fonctionne bien pour démarrer. Pour une **précision maximale** 
 | Variable            | Rôle                                                  | Défaut            |
 | ------------------- | ----------------------------------------------------- | ----------------- |
 | `ANTHROPIC_API_KEY` | Votre clé Anthropic (obligatoire)                     | —                 |
-| `MODELE`            | Modèle Claude. `claude-sonnet-4-6` = plus rapide      | `claude-opus-4-8` |
+| `MODELE`            | Modèle de génération. `claude-sonnet-4-6` = plus rapide | `claude-opus-4-8` |
+| `MODELE_DETECTION`  | Modèle rapide pour détecter les sujets                | `claude-haiku-4-5` |
 | `EFFORT`            | Profondeur de réflexion : `low`, `medium`, `high`     | `medium`          |
+| `RECHERCHE_WEB`     | Recherche web (`true`/`false`). Repli auto si indispo. | `true`            |
 | `PORT`              | Port du serveur local                                 | `3000`            |
 
 Pour des réponses **plus rapides** en rencontre, vous pouvez mettre `MODELE=claude-sonnet-4-6`.
@@ -113,7 +115,8 @@ Pour des réponses **plus rapides** en rencontre, vous pouvez mettre `MODELE=cla
 - **« Clé API invalide »** → vérifiez `ANTHROPIC_API_KEY` dans `.env`, sans espace ni guillemets.
 - **Le micro ne fonctionne pas** → utilisez Chrome ou Edge sur ordinateur, et autorisez le microphone. `localhost` est considéré comme sécuritaire par le navigateur.
 - **« Reconnaissance vocale non supportée »** → Firefox/Safari ne supportent pas bien cette fonction. Utilisez Chrome/Edge, ou tapez/collez la transcription manuellement.
-- **Rien ne s'affiche après « Exécuter »** → vérifiez que le serveur (`npm start`) tourne toujours et que vous avez une connexion internet (pour la recherche web).
+- **« Génération en cours » mais rien ne sort** → l'agent affiche maintenant le vrai message d'erreur. S'il mentionne la recherche web, mettez `RECHERCHE_WEB=false` dans `.env`. Pour plus de vitesse, mettez `MODELE=claude-sonnet-4-6`. Vérifiez aussi votre connexion internet et regardez la fenêtre noire (terminal) : les erreurs détaillées s'y affichent.
+- **Aucun sujet n'apparaît** → parlez quelques phrases, ou cliquez sur **« Détecter »**. La détection se fait automatiquement toutes les ~10 secondes pendant l'écoute.
 
 ---
 

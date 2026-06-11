@@ -70,14 +70,20 @@ body {
 
 .grille {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1.2fr;
   gap: 20px;
-  padding: 24px 28px;
+  padding: 4px 28px 24px;
   max-width: 1280px;
   margin: 0 auto;
 }
 @media (max-width: 900px) {
   .grille { grid-template-columns: 1fr; }
+}
+
+.carte-pleine {
+  max-width: 1280px;
+  margin: 24px auto 0;
+  width: calc(100% - 56px);
 }
 
 .carte {
@@ -239,6 +245,83 @@ body {
 .cert-confirme { background: #e8f5e9; color: var(--vert); }
 .cert-verifier { background: #fff4e0; color: var(--action-fonce); }
 .cert-estimation { background: #eef1f3; color: var(--gris-texte); }
+
+/* Boutons mini */
+.btn-mini {
+  background: #eef1f3;
+  color: var(--bleu-fonce);
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+.btn-mini:hover:not(:disabled) { background: #e2e7ea; }
+
+.indice {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: var(--gris-texte);
+}
+
+/* Liste des sujets detectes */
+.liste-sujets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 260px;
+}
+.vide-mini {
+  color: var(--gris-texte);
+  background: var(--gris-fond);
+  border: 1px dashed var(--gris-bord);
+  border-radius: 9px;
+  padding: 18px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.sujet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--gris-bord);
+  border-left: 4px solid var(--accent);
+  border-radius: 9px;
+  background: #fff;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.sujet:hover { box-shadow: var(--ombre); }
+.sujet-actif {
+  border-left-color: var(--action);
+  background: #fffaf3;
+}
+.sujet-nouveau {
+  animation: apparition 0.4s ease;
+  border-left-color: var(--action);
+}
+@keyframes apparition {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.sujet-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sujet-titre { font-weight: 600; color: #1f2a30; }
+.sujet-cat {
+  font-size: 0.74rem;
+  color: var(--accent-fonce);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.btn-generer {
+  background: var(--action);
+  color: #fff;
+  padding: 8px 13px;
+  font-size: 0.86rem;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.btn-generer:hover:not(:disabled) { background: var(--action-fonce); }
 
 .curseur::after {
   content: "▍";

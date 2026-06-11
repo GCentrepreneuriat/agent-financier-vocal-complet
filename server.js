@@ -1,10 +1,9 @@
 // ============================================================
 //  Agent financier vocal — serveur
 //  - Garde la cle Anthropic en securite (jamais envoyee au navigateur)
-//  - Recoit la transcription de la rencontre
-//  - Appelle Claude (Opus 4.8) AVEC recherche web sur sources officielles
-//  - Renvoie l'analyse en streaming (SSE) : sujet, questions du client,
-//    reponse verifiee + sources, questions a poser, directions optimales
+//  - Detecte automatiquement les SUJETS abordes dans la rencontre
+//  - Sur demande (bouton par sujet), genere l'information verifiee
+//    avec sources officielles, questions a poser et directions optimales
 // ============================================================
 
 import "dotenv/config";
@@ -17,15 +16,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ---------- Configuration ----------
 const PORT = process.env.PORT || 3000;
-const MODELE = process.env.MODELE || "claude-opus-4-8";
+const MODELE = process.env.MODELE || "claude-opus-4-8"; // generation (qualite)
+const MODELE_DETECTION = process.env.MODELE_DETECTION || "claude-haiku-4-5"; // detection (rapide)
 const EFFORT = process.env.EFFORT || "medium"; // low | medium | high
 const API_KEY = process.env.ANTHROPIC_API_KEY;
+// Recherche web activee par defaut ; repli automatique si indisponible.
+const RECHERCHE_WEB = (process.env.RECHERCHE_WEB || "true").toLowerCase() !== "false";
 
-// Limite de securite sur la longueur de la transcription envoyee au modele.
-// On garde la portion la plus RECENTE de la rencontre (la plus pertinente).
 const MAX_CARACTERES_TRANSCRIPTION = 24000;
-// Nombre max de relances quand la recherche web atteint sa limite interne.
 const MAX_CONTINUATIONS = 4;
+const DELAI_MAX_MS = 180000; // securite : ne jamais rester bloque indefiniment
 
 if (!API_KEY) {
   console.error(
@@ -37,179 +37,267 @@ if (!API_KEY) {
 
 const anthropic = new Anthropic({ apiKey: API_KEY });
 
-// ---------- Consigne systeme (le « cerveau » de l'agent) ----------
-const CONSIGNE_SYSTEME = `Tu es un assistant expert en services financiers qui ecoute une rencontre entre un conseiller et son client, au Quebec. La rencontre se deroule en francais quebecois (langage parle, abreviations, parfois imprecis).
+// ---------- Consignes systeme ----------
+const CONSIGNE_DETECTION = `Tu analyses la transcription (francais quebecois, langage parle) d'une rencontre entre un conseiller financier et son client, au Quebec.
 
-Ta mission, quand le conseiller declenche l'analyse :
-1. Comprendre le SUJET reel de la rencontre et la direction qu'elle prend.
-2. Detecter les QUESTIONS posees par le client (explicites ou implicites).
-3. Fournir de l'information EXACTE et VERIFIABLE sur le sujet.
-4. Proposer des QUESTIONS PERTINENTES que le conseiller devrait poser.
-5. Proposer des DIRECTIONS optimales a prendre avec ce client.
+Identifie les SUJETS financiers CONCRETS reellement abordes ou en train d'etre abordes. Exemples de sujets : "Gel successoral", "Fiscalite entreprise agricole", "Cotisation REER", "Transfert d'actions", "Assurance vie", "Remuneration salaire vs dividende", "CELIAPP", "Planification de la retraite".
 
-Domaines couverts : placements (REER, CELI, CELIAPP, REEE, FERR), assurances (vie, invalidite, maladies graves), prets et hypotheques, fiscalite (personnelle et corporative, fiscalite avancee, transfert de parts/actions, gel successoral, remuneration salaire vs dividende), structures corporatives, planification de la retraite (RRQ, PSV, SRG), succession et planification successorale.
+Regles :
+- Donne des titres COURTS et precis (2 a 5 mots).
+- Maximum 8 sujets, du plus pertinent au moins pertinent.
+- Ignore le bavardage (meteo, politesses) : seulement les sujets financiers.
+- Si rien de financier n'est encore clair, retourne une liste vide.
 
-REGLES DE VERACITE (essentielles) :
-- Pour tout chiffre precis, plafond, taux, regle fiscale ou date qui peut changer d'une annee a l'autre, UTILISE l'outil de recherche web et cite des sources OFFICIELLES en priorite : Revenu Quebec, Agence du revenu du Canada (ARC), Autorite des marches financiers (AMF), Retraite Quebec, ministere des Finances, Educaloi, Chambre de la securite financiere.
-- N'INVENTE JAMAIS un chiffre, un plafond ou une regle. Si tu n'es pas certain, dis-le clairement.
-- Indique pour chaque element ton niveau de certitude : [Confirme par source], [A verifier] ou [Estimation].
-- Sur les sujets tres pointus (fiscalite avancee, transfert de parts, structures corporatives), rappelle quand c'est pertinent qu'une validation par un fiscaliste, comptable (CPA) ou notaire est requise. Tu es une aide a la decision, pas un avis professionnel definitif.
-- Indique l'annee de reference des chiffres (ex : « plafond CELI 2026 »).
+Reponds UNIQUEMENT avec du JSON valide, sans aucun texte autour, exactement dans ce format :
+{"sujets":[{"titre":"...","categorie":"..."}]}
+ou "categorie" est l'un de : Placements, Assurances, Fiscalite, Retraite, Succession, Corporatif, Prets, Autre.`;
 
-STYLE :
-- Reponds en francais quebecois professionnel, clair et concis. Va droit au but.
-- Le conseiller lit ta reponse en pleine rencontre : priorise l'utile, pas le bavardage.
-- Reponds TOUJOURS avec exactement ces sections, dans cet ordre, en utilisant ces titres exacts :
+const CONSIGNE_GENERATION = `Tu es un assistant expert en services financiers au Quebec. On te donne la transcription (francais quebecois) d'une rencontre conseiller-client, ainsi qu'UN sujet precis a approfondir. Tu fournis au conseiller, EN DIRECT pendant la rencontre, l'information utile sur ce sujet.
 
-## Sujet detecte
-(1 a 3 phrases : de quoi parle la rencontre et ou elle s'en va.)
+Domaines : placements (REER, CELI, CELIAPP, REEE, FERR), assurances, prets/hypotheques, fiscalite personnelle et corporative (fiscalite avancee, transfert de parts/actions, gel successoral, salaire vs dividende, fiscalite agricole), structures corporatives, retraite (RRQ, PSV, SRG), succession.
 
-## Questions du client
-(Liste a puces des questions detectees. Si aucune question claire, ecris la principale preoccupation detectee.)
+REGLES DE VERACITE :
+- Pour tout chiffre, plafond, taux, regle fiscale ou date pouvant changer d'une annee a l'autre, UTILISE la recherche web et cite des sources OFFICIELLES en priorite : Revenu Quebec, Agence du revenu du Canada (ARC), Autorite des marches financiers (AMF), Retraite Quebec, ministere des Finances, Educaloi.
+- N'INVENTE JAMAIS un chiffre ou une regle. Si incertain, dis-le.
+- Indique le niveau de certitude de chaque element : [Confirme par source], [A verifier] ou [Estimation], et l'annee de reference des chiffres.
+- Sur les sujets pointus (fiscalite avancee, transfert de parts, structures corporatives), rappelle qu'une validation par un fiscaliste, CPA ou notaire est requise. Tu es une aide a la decision, pas un avis professionnel definitif.
+
+STYLE : francais quebecois professionnel, clair, concis, oriente action (le conseiller te lit en pleine rencontre).
+
+Reponds TOUJOURS avec exactement ces sections, dans cet ordre, avec ces titres exacts :
 
 ## Reponse verifiee
-(L'information exacte sur le sujet, avec les niveaux de certitude [Confirme par source]/[A verifier]/[Estimation] et l'annee de reference des chiffres.)
+(L'information exacte sur le sujet, avec niveaux de certitude et annee de reference.)
 
 ## Questions a poser au client
-(3 a 5 questions pertinentes et strategiques que le conseiller devrait poser maintenant.)
+(3 a 5 questions strategiques et pertinentes pour ce sujet.)
 
 ## Directions optimales
-(2 a 4 pistes concretes et optimales a explorer avec ce client, avec une courte justification chacune.)
+(2 a 4 pistes concretes et optimales a explorer avec ce client sur ce sujet, avec une courte justification chacune.)
 
 ## Sources
-(Liste des sources officielles utilisees, avec leurs liens. Si tu n'as pas utilise la recherche web, indique-le et invite a verifier les chiffres.)`;
+(Sources officielles utilisees avec leurs liens. Si tu n'as pas pu utiliser la recherche web, indique-le clairement et invite a verifier les chiffres a la source.)`;
 
-// ---------- Application Express ----------
+// ---------- Application ----------
 const app = express();
 app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// Petite verification d'etat (utile pour diagnostiquer)
 app.get("/api/sante", (req, res) => {
-  res.json({ ok: true, modele: MODELE, effort: EFFORT });
+  res.json({ ok: true, modele: MODELE, detection: MODELE_DETECTION, rechercheWeb: RECHERCHE_WEB });
 });
 
-// Outil de recherche web (sources a jour + citations automatiques)
-const OUTILS = [
-  {
-    type: "web_search_20260209",
-    name: "web_search",
-    max_uses: 6,
-    user_location: {
-      type: "approximate",
-      country: "CA",
-      region: "Quebec",
+function outilsRecherche() {
+  return [
+    {
+      type: "web_search_20260209",
+      name: "web_search",
+      max_uses: 5,
+      user_location: { type: "approximate", country: "CA", region: "Quebec" },
     },
-  },
-];
+  ];
+}
 
 function envoyerSSE(res, evenement, donnees) {
   res.write(`event: ${evenement}\n`);
   res.write(`data: ${JSON.stringify(donnees)}\n\n`);
 }
 
-// ---------- Endpoint principal : analyse de la rencontre ----------
-app.post("/api/analyser", async (req, res) => {
-  const transcriptionBrute = (req.body?.transcription || "").toString().trim();
-
-  if (!transcriptionBrute) {
-    return res
-      .status(400)
-      .json({ erreur: "La transcription est vide. Demarre l'ecoute d'abord." });
-  }
-
-  // On garde la portion la plus recente si c'est tres long.
-  let transcription = transcriptionBrute;
+function tronquer(transcription) {
   if (transcription.length > MAX_CARACTERES_TRANSCRIPTION) {
-    transcription =
+    return (
       "[...debut de la rencontre tronque...]\n" +
-      transcription.slice(-MAX_CARACTERES_TRANSCRIPTION);
+      transcription.slice(-MAX_CARACTERES_TRANSCRIPTION)
+    );
+  }
+  return transcription;
+}
+
+// ---------- Detection des sujets ----------
+app.post("/api/sujets", async (req, res) => {
+  const transcription = tronquer((req.body?.transcription || "").toString().trim());
+  if (!transcription || transcription.length < 15) {
+    return res.json({ sujets: [] });
   }
 
-  // En-tetes SSE (streaming vers le navigateur)
+  try {
+    const reponse = await anthropic.messages.create({
+      model: MODELE_DETECTION,
+      max_tokens: 1024,
+      system: CONSIGNE_DETECTION,
+      messages: [
+        {
+          role: "user",
+          content:
+            "Transcription de la rencontre en cours :\n\n" +
+            transcription +
+            "\n\nRetourne le JSON des sujets.",
+        },
+      ],
+    });
+
+    const texte = (reponse.content || [])
+      .filter((b) => b.type === "text")
+      .map((b) => b.text)
+      .join("");
+
+    let sujets = [];
+    try {
+      const debut = texte.indexOf("{");
+      const fin = texte.lastIndexOf("}");
+      if (debut !== -1 && fin !== -1) {
+        const json = JSON.parse(texte.slice(debut, fin + 1));
+        if (Array.isArray(json.sujets)) {
+          sujets = json.sujets
+            .filter((s) => s && s.titre)
+            .map((s) => ({
+              titre: String(s.titre).trim().slice(0, 80),
+              categorie: String(s.categorie || "Autre").trim(),
+            }))
+            .slice(0, 8);
+        }
+      }
+    } catch (_) {
+      /* JSON imparfait : on renvoie une liste vide plutot que de planter */
+    }
+
+    res.json({ sujets });
+  } catch (err) {
+    console.error("[Erreur detection sujets]", err?.status, err?.message);
+    res.status(500).json({
+      sujets: [],
+      erreur: err?.status === 401 ? "Cle API invalide." : "Detection impossible.",
+    });
+  }
+});
+
+// ---------- Generation d'information pour UN sujet ----------
+app.post("/api/generer", async (req, res) => {
+  const transcription = tronquer((req.body?.transcription || "").toString().trim());
+  const sujet = (req.body?.sujet || "").toString().trim().slice(0, 120);
+
+  if (!sujet) {
+    return res.status(400).json({ erreur: "Aucun sujet fourni." });
+  }
+
   res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders?.();
-
-  const messages = [
-    {
-      role: "user",
-      content:
-        "Voici la transcription (francais quebecois) de la rencontre en cours. " +
-        "Analyse-la et reponds avec les sections demandees.\n\n" +
-        "=== TRANSCRIPTION ===\n" +
-        transcription +
-        "\n=== FIN ===",
-    },
-  ];
 
   let clientFerme = false;
   req.on("close", () => {
     clientFerme = true;
   });
 
-  try {
-    for (let i = 0; i < MAX_CONTINUATIONS && !clientFerme; i++) {
-      const stream = anthropic.messages.stream({
+  // Maintien de connexion (evite les coupures sur les longues reponses)
+  const battement = setInterval(() => {
+    if (!clientFerme) res.write(": ping\n\n");
+  }, 12000);
+
+  // Securite : ne jamais rester bloque indefiniment
+  let delaiDepasse = false;
+  const minuterie = setTimeout(() => {
+    delaiDepasse = true;
+  }, DELAI_MAX_MS);
+
+  const messageUtilisateur =
+    "SUJET A APPROFONDIR : " +
+    sujet +
+    "\n\nVoici la transcription (francais quebecois) de la rencontre en cours, comme contexte :\n\n" +
+    "=== TRANSCRIPTION ===\n" +
+    (transcription || "(transcription vide)") +
+    "\n=== FIN ===\n\n" +
+    "Donne l'information sur le sujet ci-dessus, avec les sections demandees.";
+
+  // Tente avec la recherche web ; en cas d'echec avant tout texte, repli sans outils.
+  async function lancer(avecOutils) {
+    const messages = [{ role: "user", content: messageUtilisateur }];
+    let aEcrit = false;
+
+    for (let i = 0; i < MAX_CONTINUATIONS && !clientFerme && !delaiDepasse; i++) {
+      const params = {
         model: MODELE,
-        max_tokens: 16000,
+        max_tokens: 8000,
         thinking: { type: "adaptive" },
         output_config: { effort: EFFORT },
-        system: CONSIGNE_SYSTEME,
-        tools: OUTILS,
+        system: CONSIGNE_GENERATION,
         messages,
-      });
+      };
+      if (avecOutils) params.tools = outilsRecherche();
+
+      const stream = anthropic.messages.stream(params);
 
       for await (const event of stream) {
-        if (clientFerme) break;
+        if (clientFerme || delaiDepasse) break;
         if (
           event.type === "content_block_start" &&
           event.content_block?.type === "server_tool_use"
         ) {
-          envoyerSSE(res, "statut", {
-            message: "Recherche de sources verifiees en cours...",
-          });
+          envoyerSSE(res, "statut", { message: "Recherche de sources verifiees..." });
         }
-        if (
-          event.type === "content_block_delta" &&
-          event.delta?.type === "text_delta"
-        ) {
+        if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
+          aEcrit = true;
           envoyerSSE(res, "texte", { texte: event.delta.text });
         }
       }
 
       const messageFinal = await stream.finalMessage();
-
-      // La recherche web a atteint sa limite interne : on relance pour continuer.
       if (messageFinal.stop_reason === "pause_turn") {
         messages.push({ role: "assistant", content: messageFinal.content });
         continue;
       }
       break;
     }
+    return aEcrit;
+  }
 
-    if (!clientFerme) {
+  try {
+    let aEcrit = false;
+    try {
+      aEcrit = await lancer(RECHERCHE_WEB);
+    } catch (err1) {
+      console.error("[generer] echec 1er essai:", err1?.status, err1?.message);
+      // Repli : si la recherche web a echoue avant tout texte, on reessaie sans outils.
+      if (RECHERCHE_WEB && !clientFerme && !delaiDepasse) {
+        envoyerSSE(res, "statut", {
+          message: "Recherche web indisponible — reponse basee sur les connaissances du modele.",
+        });
+        aEcrit = await lancer(false);
+      } else {
+        throw err1;
+      }
+    }
+
+    if (delaiDepasse && !aEcrit) {
+      envoyerSSE(res, "erreur", {
+        message: "Le delai a ete depasse. Reessaie (ou mets MODELE=claude-sonnet-4-6 pour aller plus vite).",
+      });
+    } else if (!clientFerme) {
       envoyerSSE(res, "termine", { ok: true });
     }
   } catch (err) {
-    console.error("[Erreur analyse]", err);
+    console.error("[Erreur generation]", err?.status, err?.message, err);
     if (!clientFerme) {
-      const message =
+      const base =
         err?.status === 401
           ? "Cle API invalide. Verifie ANTHROPIC_API_KEY dans le fichier .env."
+          : err?.status === 404
+          ? "Modele introuvable. Verifie MODELE dans .env (ex: claude-opus-4-8 ou claude-sonnet-4-6)."
           : err?.status === 429
           ? "Limite de requetes atteinte. Attends quelques secondes et reessaie."
-          : "Une erreur est survenue pendant l'analyse. Reessaie.";
-      envoyerSSE(res, "erreur", { message });
+          : "Une erreur est survenue pendant la generation.";
+      envoyerSSE(res, "erreur", { message: base, details: err?.message || "" });
     }
   } finally {
+    clearInterval(battement);
+    clearTimeout(minuterie);
     if (!clientFerme) res.end();
   }
 });
 
 app.listen(PORT, () => {
   console.log(`\n  Agent financier vocal demarre.`);
-  console.log(`  Ouvre ton navigateur (Chrome/Edge) sur : http://localhost:${PORT}`);
-  console.log(`  Modele : ${MODELE}  |  Effort : ${EFFORT}\n`);
+  console.log(`  Ouvre Chrome/Edge sur : http://localhost:${PORT}`);
+  console.log(`  Generation : ${MODELE}  |  Detection : ${MODELE_DETECTION}  |  Recherche web : ${RECHERCHE_WEB}\n`);
 });
