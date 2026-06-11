@@ -4,6 +4,7 @@
 //  - Detecte automatiquement les SUJETS abordes dans la rencontre
 //  - Sur demande (bouton par sujet), genere l'information verifiee
 //    avec sources officielles, questions a poser et directions optimales
+//  - Mode SANS streaming (plus fiable derriere antivirus / proxy Windows)
 // ============================================================
 
 import "dotenv/config";
@@ -20,12 +21,11 @@ const MODELE = process.env.MODELE || "claude-opus-4-8"; // generation (qualite)
 const MODELE_DETECTION = process.env.MODELE_DETECTION || "claude-haiku-4-5"; // detection (rapide)
 const EFFORT = process.env.EFFORT || "medium"; // low | medium | high
 const API_KEY = process.env.ANTHROPIC_API_KEY;
-// Recherche web activee par defaut ; repli automatique si indisponible.
 const RECHERCHE_WEB = (process.env.RECHERCHE_WEB || "true").toLowerCase() !== "false";
 
 const MAX_CARACTERES_TRANSCRIPTION = 24000;
 const MAX_CONTINUATIONS = 4;
-const DELAI_MAX_MS = 180000; // securite : ne jamais rester bloque indefiniment
+const DELAI_REQUETE_MS = 120000; // securite par requete au modele
 
 if (!API_KEY) {
   console.error(
@@ -62,7 +62,7 @@ REGLES DE VERACITE :
 - Indique le niveau de certitude de chaque element : [Confirme par source], [A verifier] ou [Estimation], et l'annee de reference des chiffres.
 - Sur les sujets pointus (fiscalite avancee, transfert de parts, structures corporatives), rappelle qu'une validation par un fiscaliste, CPA ou notaire est requise. Tu es une aide a la decision, pas un avis professionnel definitif.
 
-STYLE : francais quebecois professionnel, clair, concis, oriente action (le conseiller te lit en pleine rencontre). Reponds DIRECTEMENT et RAPIDEMENT avec les sections demandees, sans afficher de raisonnement, de brouillon ni de preambule.
+STYLE : francais quebecois professionnel, clair, concis, oriente action (le conseiller te lit en pleine rencontre). Reponds DIRECTEMENT avec les sections demandees, sans afficher de raisonnement, de brouillon ni de preambule.
 
 Reponds TOUJOURS avec exactement ces sections, dans cet ordre, avec ces titres exacts :
 
@@ -98,19 +98,26 @@ function outilsRecherche() {
   ];
 }
 
-function envoyerSSE(res, evenement, donnees) {
-  res.write(`event: ${evenement}\n`);
-  res.write(`data: ${JSON.stringify(donnees)}\n\n`);
-}
-
 function tronquer(transcription) {
   if (transcription.length > MAX_CARACTERES_TRANSCRIPTION) {
-    return (
-      "[...debut de la rencontre tronque...]\n" +
-      transcription.slice(-MAX_CARACTERES_TRANSCRIPTION)
-    );
+    return "[...debut de la rencontre tronque...]\n" + transcription.slice(-MAX_CARACTERES_TRANSCRIPTION);
   }
   return transcription;
+}
+
+function texteDesBlocs(reponse) {
+  return (reponse.content || [])
+    .filter((b) => b.type === "text")
+    .map((b) => b.text)
+    .join("");
+}
+
+function messageErreur(err) {
+  if (err?.status === 401) return "Cle API invalide. Verifie ANTHROPIC_API_KEY dans le fichier .env.";
+  if (err?.status === 404) return "Modele introuvable. Verifie MODELE dans .env (ex: claude-opus-4-8 ou claude-sonnet-4-6).";
+  if (err?.status === 429) return "Limite de requetes atteinte. Attends quelques secondes et reessaie.";
+  if (err?.name === "APIConnectionTimeoutError") return "Le modele n'a pas repondu a temps. Reessaie, ou mets MODELE=claude-sonnet-4-6.";
+  return "Une erreur est survenue.";
 }
 
 // ---------- Detection des sujets ----------
@@ -121,26 +128,19 @@ app.post("/api/sujets", async (req, res) => {
   }
 
   try {
-    const reponse = await anthropic.messages.create({
-      model: MODELE_DETECTION,
-      max_tokens: 1024,
-      system: CONSIGNE_DETECTION,
-      messages: [
-        {
-          role: "user",
-          content:
-            "Transcription de la rencontre en cours :\n\n" +
-            transcription +
-            "\n\nRetourne le JSON des sujets.",
-        },
-      ],
-    });
+    const reponse = await anthropic.messages.create(
+      {
+        model: MODELE_DETECTION,
+        max_tokens: 1024,
+        system: CONSIGNE_DETECTION,
+        messages: [
+          { role: "user", content: "Transcription de la rencontre en cours :\n\n" + transcription + "\n\nRetourne le JSON des sujets." },
+        ],
+      },
+      { timeout: 30000, maxRetries: 1 }
+    );
 
-    const texte = (reponse.content || [])
-      .filter((b) => b.type === "text")
-      .map((b) => b.text)
-      .join("");
-
+    const texte = texteDesBlocs(reponse);
     let sujets = [];
     try {
       const debut = texte.indexOf("{");
@@ -150,73 +150,25 @@ app.post("/api/sujets", async (req, res) => {
         if (Array.isArray(json.sujets)) {
           sujets = json.sujets
             .filter((s) => s && s.titre)
-            .map((s) => ({
-              titre: String(s.titre).trim().slice(0, 80),
-              categorie: String(s.categorie || "Autre").trim(),
-            }))
+            .map((s) => ({ titre: String(s.titre).trim().slice(0, 80), categorie: String(s.categorie || "Autre").trim() }))
             .slice(0, 8);
         }
       }
-    } catch (_) {
-      /* JSON imparfait : on renvoie une liste vide plutot que de planter */
-    }
-
+    } catch (_) {}
     res.json({ sujets });
   } catch (err) {
-    console.error("[Erreur detection sujets]", err?.status, err?.message);
-    res.status(500).json({
-      sujets: [],
-      erreur: err?.status === 401 ? "Cle API invalide." : "Detection impossible.",
-    });
+    console.error("[Erreur detection]", err?.status, err?.message);
+    res.status(500).json({ sujets: [], erreur: messageErreur(err) });
   }
 });
 
-// ---------- Generation d'information pour UN sujet ----------
+// ---------- Generation d'information pour UN sujet (SANS streaming) ----------
 app.post("/api/generer", async (req, res) => {
   const transcription = tronquer((req.body?.transcription || "").toString().trim());
   const sujet = (req.body?.sujet || "").toString().trim().slice(0, 120);
-
   if (!sujet) {
     return res.status(400).json({ erreur: "Aucun sujet fourni." });
   }
-
-  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-  res.setHeader("Cache-Control", "no-cache, no-transform");
-  res.setHeader("Connection", "keep-alive");
-  res.flushHeaders?.();
-
-  let clientFerme = false;
-  req.on("close", () => {
-    clientFerme = true;
-  });
-
-  const etat = { aEcrit: false };
-
-  // Message immediat pour confirmer que c'est parti
-  envoyerSSE(res, "statut", { message: "Analyse du sujet en cours..." });
-
-  // Maintien de connexion + progression visible tant qu'aucun texte n'est sorti
-  const messagesProgression = [
-    "Analyse du sujet en cours...",
-    "Recherche d'information verifiee...",
-    "Verification des sources officielles...",
-    "Redaction de la reponse...",
-  ];
-  let iProgression = 0;
-  const battement = setInterval(() => {
-    if (clientFerme) return;
-    res.write(": ping\n\n");
-    if (!etat.aEcrit) {
-      iProgression = (iProgression + 1) % messagesProgression.length;
-      envoyerSSE(res, "statut", { message: messagesProgression[iProgression] });
-    }
-  }, 4000);
-
-  // Securite : ne jamais rester bloque indefiniment
-  let delaiDepasse = false;
-  const minuterie = setTimeout(() => {
-    delaiDepasse = true;
-  }, DELAI_MAX_MS);
 
   const messageUtilisateur =
     "SUJET A APPROFONDIR : " +
@@ -227,12 +179,11 @@ app.post("/api/generer", async (req, res) => {
     "\n=== FIN ===\n\n" +
     "Donne l'information sur le sujet ci-dessus, avec les sections demandees.";
 
-  // Tente avec la recherche web ; en cas d'echec avant tout texte, repli sans outils.
-  // Reflexion desactivee : la reponse commence a s'afficher rapidement.
+  // Un essai complet (avec ou sans recherche web). Gere la pause de l'outil web.
   async function lancer(avecOutils) {
     const messages = [{ role: "user", content: messageUtilisateur }];
-
-    for (let i = 0; i < MAX_CONTINUATIONS && !clientFerme && !delaiDepasse; i++) {
+    let texte = "";
+    for (let i = 0; i < MAX_CONTINUATIONS; i++) {
       const params = {
         model: MODELE,
         max_tokens: 8000,
@@ -243,77 +194,39 @@ app.post("/api/generer", async (req, res) => {
       };
       if (avecOutils) params.tools = outilsRecherche();
 
-      const stream = anthropic.messages.stream(params);
-
-      for await (const event of stream) {
-        if (clientFerme || delaiDepasse) break;
-        if (
-          event.type === "content_block_start" &&
-          event.content_block?.type === "server_tool_use"
-        ) {
-          envoyerSSE(res, "statut", { message: "Recherche de sources verifiees..." });
-        }
-        if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
-          etat.aEcrit = true;
-          envoyerSSE(res, "texte", { texte: event.delta.text });
-        }
-      }
-
-      const messageFinal = await stream.finalMessage();
-      if (messageFinal.stop_reason === "pause_turn") {
-        messages.push({ role: "assistant", content: messageFinal.content });
+      const reponse = await anthropic.messages.create(params, { timeout: DELAI_REQUETE_MS, maxRetries: 1 });
+      texte += texteDesBlocs(reponse);
+      if (reponse.stop_reason === "pause_turn") {
+        messages.push({ role: "assistant", content: reponse.content });
         continue;
       }
       break;
     }
-    return etat.aEcrit;
+    return texte.trim();
   }
 
   try {
-    let aEcrit = false;
+    let texte = "";
+    let sansRecherche = false;
     try {
-      aEcrit = await lancer(RECHERCHE_WEB);
+      texte = await lancer(RECHERCHE_WEB);
     } catch (err1) {
-      console.error("[generer] echec 1er essai:", err1?.status, err1?.message);
-      // Repli : si la recherche web a echoue avant tout texte, on reessaie sans outils.
-      if (RECHERCHE_WEB && !clientFerme && !delaiDepasse) {
-        envoyerSSE(res, "statut", {
-          message: "Recherche web indisponible — reponse basee sur les connaissances du modele.",
-        });
-        aEcrit = await lancer(false);
+      console.error("[generer] echec 1er essai:", err1?.status, err1?.name, err1?.message);
+      if (RECHERCHE_WEB) {
+        sansRecherche = true;
+        texte = await lancer(false); // repli sans recherche web
       } else {
         throw err1;
       }
     }
 
-    if (delaiDepasse && !aEcrit) {
-      envoyerSSE(res, "erreur", {
-        message: "Le delai a ete depasse. Reessaie (ou mets MODELE=claude-sonnet-4-6 pour aller plus vite).",
-      });
-    } else if (!aEcrit && !clientFerme) {
-      envoyerSSE(res, "erreur", {
-        message: "Aucune reponse generee. Reessaie, ou mets RECHERCHE_WEB=false dans .env.",
-      });
-    } else if (!clientFerme) {
-      envoyerSSE(res, "termine", { ok: true });
+    if (!texte) {
+      return res.json({ erreur: "Aucune reponse generee. Reessaie, ou mets RECHERCHE_WEB=false dans .env." });
     }
+    res.json({ texte, sansRecherche });
   } catch (err) {
-    console.error("[Erreur generation]", err?.status, err?.message, err);
-    if (!clientFerme) {
-      const base =
-        err?.status === 401
-          ? "Cle API invalide. Verifie ANTHROPIC_API_KEY dans le fichier .env."
-          : err?.status === 404
-          ? "Modele introuvable. Verifie MODELE dans .env (ex: claude-opus-4-8 ou claude-sonnet-4-6)."
-          : err?.status === 429
-          ? "Limite de requetes atteinte. Attends quelques secondes et reessaie."
-          : "Une erreur est survenue pendant la generation.";
-      envoyerSSE(res, "erreur", { message: base, details: err?.message || "" });
-    }
-  } finally {
-    clearInterval(battement);
-    clearTimeout(minuterie);
-    if (!clientFerme) res.end();
+    console.error("[Erreur generation]", err?.status, err?.name, err?.message);
+    res.status(500).json({ erreur: messageErreur(err), details: err?.message || "" });
   }
 });
 

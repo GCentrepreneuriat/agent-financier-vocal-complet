@@ -1,8 +1,8 @@
 // ============================================================
 //  Agent financier vocal — logique navigateur
 //  - Ecoute le micro (Web Speech API, fr-CA) -> transcription auto
-//  - Detecte automatiquement les SUJETS abordes
-//  - Un bouton "Generer" par sujet -> information verifiee en direct
+//  - Detecte automatiquement les SUJETS abordes (en continu)
+//  - Un bouton "Generer" par sujet -> information verifiee (mode simple)
 // ============================================================
 
 (() => {
@@ -29,12 +29,11 @@
   let generationEnCours = false;
   let texteFinalise = elTranscription.value || "";
 
-  // Sujets detectes (cle normalisee -> { titre, categorie, nouveau })
-  const sujets = new Map();
-  // Detection auto
+  const sujets = new Map(); // cle normalisee -> { titre, categorie, nouveau }
   let detectionEnCours = false;
   let dernierLongueurDetectee = 0;
   let minuterieDetection = null;
+  let minuterieSaisie = null;
 
   // ---------- Reconnaissance vocale ----------
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -58,14 +57,13 @@
       elTranscription.value = texteFinalise.trim();
       elApercu.textContent = provisoire ? "… " + provisoire : "";
       elTranscription.scrollTop = elTranscription.scrollHeight;
+      planifierDetection(); // detection au fil de la parole
     };
 
     r.onerror = (event) => {
       if (event.error === "no-speech" || event.error === "aborted") return;
       if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-        afficherErreur(
-          "Acces au micro refuse. Autorisez le microphone dans le navigateur, puis reessayez."
-        );
+        afficherErreur("Acces au micro refuse. Autorisez le microphone dans le navigateur, puis reessayez.");
         arreterEcoute();
       } else if (event.error === "network") {
         afficherErreur("Erreur reseau de la reconnaissance vocale. Verifiez votre connexion.");
@@ -85,9 +83,7 @@
   function demarrerEcoute() {
     masquerErreur();
     if (!SR) {
-      afficherErreur(
-        "Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Google Chrome ou Microsoft Edge (ordinateur). Vous pouvez aussi taper ou coller la transcription."
-      );
+      afficherErreur("Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Google Chrome ou Microsoft Edge (ordinateur). Vous pouvez aussi taper ou coller la transcription.");
       return;
     }
     if (!reconnaissance) reconnaissance = initReconnaissance();
@@ -110,8 +106,7 @@
     elApercu.textContent = "";
     majInterfaceEcoute();
     arreterDetectionAuto();
-    // Une derniere detection a l'arret pour capter ce qui vient d'etre dit.
-    detecterSujets();
+    detecterSujets(); // une derniere detection a l'arret
   }
 
   function majInterfaceEcoute() {
@@ -131,19 +126,26 @@
   }
 
   // ---------- Detection des sujets ----------
-  function demarrerDetectionAuto() {
-    if (minuterieDetection) return;
-    // Premiere detection rapide apres le debut de l'ecoute.
-    setTimeout(() => {
-      if (enEcoute) detecterSujets();
-    }, 3000);
-    // Puis toutes les 6 s, des qu'un peu de nouveau texte est apparu.
-    minuterieDetection = setInterval(() => {
-      const longueur = elTranscription.value.trim().length;
-      if (longueur > dernierLongueurDetectee + 60) {
+  function planifierDetection() {
+    // Detecte ~2,5 s apres la derniere parole, si assez de nouveau texte.
+    if (minuterieSaisie) clearTimeout(minuterieSaisie);
+    minuterieSaisie = setTimeout(() => {
+      if (elTranscription.value.trim().length > dernierLongueurDetectee + 40) {
         detecterSujets();
       }
-    }, 6000);
+    }, 2500);
+  }
+
+  function demarrerDetectionAuto() {
+    if (minuterieDetection) return;
+    setTimeout(() => {
+      if (enEcoute) detecterSujets();
+    }, 2500);
+    minuterieDetection = setInterval(() => {
+      if (elTranscription.value.trim().length > dernierLongueurDetectee + 40) {
+        detecterSujets();
+      }
+    }, 5000);
   }
 
   function arreterDetectionAuto() {
@@ -168,6 +170,7 @@
     detectionEnCours = true;
     dernierLongueurDetectee = transcription.length;
     btnDetecter.disabled = true;
+    btnDetecter.textContent = "⏳ Detection…";
 
     try {
       const reponse = await fetch("/api/sujets", {
@@ -188,42 +191,31 @@
         if (ajout) rendreSujets();
       }
     } catch (_) {
-      /* detection silencieuse : pas d'alerte si ca echoue */
+      /* detection silencieuse */
     } finally {
       detectionEnCours = false;
       btnDetecter.disabled = false;
+      btnDetecter.innerHTML = "&#128269; Detecter";
     }
   }
 
   function rendreSujets() {
     if (sujets.size === 0) {
-      elListeSujets.innerHTML =
-        '<div class="vide-mini">Aucun sujet detecte pour l\'instant…</div>';
+      elListeSujets.innerHTML = '<div class="vide-mini">Aucun sujet detecte pour l\'instant…</div>';
       return;
     }
     let html = "";
     for (const [cle, s] of sujets) {
       html +=
-        '<div class="sujet' +
-        (s.nouveau ? " sujet-nouveau" : "") +
-        '" data-cle="' +
-        echapperAttr(cle) +
-        '">' +
+        '<div class="sujet' + (s.nouveau ? " sujet-nouveau" : "") + '" data-cle="' + echapperAttr(cle) + '">' +
         '<div class="sujet-info">' +
-        '<span class="sujet-titre">' +
-        echapper(s.titre) +
-        "</span>" +
-        '<span class="sujet-cat">' +
-        echapper(s.categorie) +
-        "</span>" +
+        '<span class="sujet-titre">' + echapper(s.titre) + "</span>" +
+        '<span class="sujet-cat">' + echapper(s.categorie) + "</span>" +
         "</div>" +
-        '<button class="btn btn-generer" data-cle="' +
-        echapperAttr(cle) +
-        '">⚡ Generer</button>' +
+        '<button class="btn btn-generer" data-cle="' + echapperAttr(cle) + '">⚡ Generer</button>' +
         "</div>";
     }
     elListeSujets.innerHTML = html;
-
     elListeSujets.querySelectorAll(".btn-generer").forEach((btn) => {
       btn.addEventListener("click", () => {
         const cle = btn.getAttribute("data-cle");
@@ -233,13 +225,12 @@
     });
   }
 
-  // ---------- Generation pour un sujet ----------
+  // ---------- Generation pour un sujet (mode simple, sans streaming) ----------
   async function genererPourSujet(titreSujet, cle) {
     if (generationEnCours) return;
     masquerErreur();
     const transcription = elTranscription.value.trim();
 
-    // Marque le sujet choisi
     if (cle && sujets.has(cle)) sujets.get(cle).nouveau = false;
     elListeSujets.querySelectorAll(".sujet").forEach((el) => {
       el.classList.toggle("sujet-actif", el.getAttribute("data-cle") === cle);
@@ -249,85 +240,52 @@
 
     generationEnCours = true;
     elTitreInfo.textContent = "3. " + titreSujet;
-    elStatutAnalyse.textContent = "Generation en cours…";
-    elStatutAnalyse.className = "badge badge-travail";
-    elResultat.innerHTML = "";
+    elResultat.innerHTML = '<div class="vide"><p>Recherche d\'information en cours…</p></div>';
+    elResultat.classList.add("curseur");
 
-    let texteComplet = "";
+    // Statut anime pendant l'attente
+    const messages = [
+      "Analyse du sujet…",
+      "Recherche d'information verifiee…",
+      "Verification des sources…",
+      "Redaction de la reponse…",
+    ];
+    let idx = 0;
+    elStatutAnalyse.textContent = messages[0];
+    elStatutAnalyse.className = "badge badge-travail";
+    const minuterie = setInterval(() => {
+      idx = (idx + 1) % messages.length;
+      elStatutAnalyse.textContent = messages[idx];
+    }, 3000);
+
     try {
       const reponse = await fetch("/api/generer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ transcription, sujet: titreSujet }),
       });
+      const data = await reponse.json().catch(() => ({}));
 
-      if (!reponse.ok) {
-        let msg = "Le serveur a refuse la requete.";
-        try {
-          const j = await reponse.json();
-          if (j?.erreur) msg = j.erreur;
-        } catch (_) {}
-        throw new Error(msg);
+      if (!reponse.ok || data.erreur) {
+        const detail = data.details ? " (" + data.details + ")" : "";
+        throw new Error((data.erreur || "Le serveur a refuse la requete.") + detail);
       }
 
-      const lecteur = reponse.body.getReader();
-      const decodeur = new TextDecoder("utf-8");
-      let tampon = "";
-
-      while (true) {
-        const { done, value } = await lecteur.read();
-        if (done) break;
-        tampon += decodeur.decode(value, { stream: true });
-        const blocs = tampon.split("\n\n");
-        tampon = blocs.pop() || "";
-
-        for (const bloc of blocs) {
-          const { evenement, donnees } = lireSSE(bloc);
-          if (!evenement) continue;
-          if (evenement === "texte" && donnees?.texte) {
-            texteComplet += donnees.texte;
-            rendreResultat(texteComplet, true);
-          } else if (evenement === "statut" && donnees?.message) {
-            elStatutAnalyse.textContent = donnees.message;
-          } else if (evenement === "erreur") {
-            const detail = donnees?.details ? " (" + donnees.details + ")" : "";
-            throw new Error((donnees?.message || "Erreur de generation.") + detail);
-          }
-        }
-      }
-
-      rendreResultat(texteComplet, false);
-      elStatutAnalyse.textContent = "Termine";
+      rendreResultat(data.texte || "", false);
+      elStatutAnalyse.textContent = data.sansRecherche ? "Termine (sans recherche web)" : "Termine";
       elStatutAnalyse.className = "badge badge-fini";
     } catch (err) {
       console.error(err);
       afficherErreur(err.message || "Erreur pendant la generation.");
       elStatutAnalyse.textContent = "Erreur";
       elStatutAnalyse.className = "badge badge-erreur";
-      if (!texteComplet) {
-        elResultat.innerHTML =
-          '<div class="vide"><p>La generation n\'a pas pu etre completee. Reessayez.</p></div>';
-      }
+      elResultat.innerHTML = '<div class="vide"><p>La generation n\'a pas pu etre completee. Reessayez.</p></div>';
     } finally {
+      clearInterval(minuterie);
+      elResultat.classList.remove("curseur");
       generationEnCours = false;
       elListeSujets.querySelectorAll(".btn-generer").forEach((b) => (b.disabled = false));
     }
-  }
-
-  function lireSSE(bloc) {
-    let evenement = null;
-    let donneesBrutes = "";
-    for (const ligne of bloc.split("\n")) {
-      if (ligne.startsWith("event:")) evenement = ligne.slice(6).trim();
-      else if (ligne.startsWith("data:")) donneesBrutes += ligne.slice(5).trim();
-    }
-    let donnees = null;
-    if (donneesBrutes) {
-      try {
-        donnees = JSON.parse(donneesBrutes);
-      } catch (_) {}
-    }
-    return { evenement, donnees };
   }
 
   // ---------- Rendu Markdown (leger, securitaire) ----------
@@ -340,14 +298,8 @@
 
   function rendreLigneInline(texte) {
     let t = echapper(texte);
-    t = t.replace(
-      /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
-    );
-    t = t.replace(
-      /(^|[\s(])(https?:\/\/[^\s)]+)/g,
-      '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>'
-    );
+    t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    t = t.replace(/(^|[\s(])(https?:\/\/[^\s)]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
     t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     t = t.replace(/\[Confirme par source\]/gi, '<span class="certitude cert-confirme">Confirme</span>');
     t = t.replace(/\[A verifier\]/gi, '<span class="certitude cert-verifier">A verifier</span>');
@@ -356,7 +308,7 @@
   }
 
   function rendreResultat(markdown, enCours) {
-    const lignes = markdown.split("\n");
+    const lignes = String(markdown).split("\n");
     let html = "";
     let dansListe = false;
     const fermerListe = () => {
@@ -393,9 +345,9 @@
       }
     }
     fermerListe();
-    elResultat.innerHTML = html || '<div class="vide"><p>…</p></div>';
+    elResultat.innerHTML = html || '<div class="vide"><p>Aucun contenu.</p></div>';
     elResultat.classList.toggle("curseur", !!enCours);
-    elResultat.scrollTop = elResultat.scrollHeight;
+    elResultat.scrollTop = 0;
   }
 
   // ---------- UI utilitaires ----------
@@ -417,8 +369,7 @@
     dernierLongueurDetectee = 0;
     rendreSujets();
     elTitreInfo.textContent = "3. Information";
-    elResultat.innerHTML =
-      '<div class="vide"><p>Choisissez un sujet detecte et cliquez sur <strong>Generer</strong>.</p></div>';
+    elResultat.innerHTML = '<div class="vide"><p>Choisissez un sujet detecte et cliquez sur <strong>Generer</strong>.</p></div>';
     elStatutAnalyse.textContent = "En attente";
     elStatutAnalyse.className = "badge badge-gris";
     masquerErreur();
@@ -432,7 +383,10 @@
   btnEffacer.addEventListener("click", effacer);
   btnDetecter.addEventListener("click", detecterSujets);
   elTranscription.addEventListener("input", () => {
-    if (!enEcoute) texteFinalise = elTranscription.value;
+    if (!enEcoute) {
+      texteFinalise = elTranscription.value;
+      planifierDetection();
+    }
   });
 
   if (!SR) {
