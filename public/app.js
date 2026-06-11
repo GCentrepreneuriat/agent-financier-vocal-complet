@@ -133,13 +133,17 @@
   // ---------- Detection des sujets ----------
   function demarrerDetectionAuto() {
     if (minuterieDetection) return;
-    // Toutes les 10 s, on detecte si assez de nouveau texte est apparu.
+    // Premiere detection rapide apres le debut de l'ecoute.
+    setTimeout(() => {
+      if (enEcoute) detecterSujets();
+    }, 3000);
+    // Puis toutes les 6 s, des qu'un peu de nouveau texte est apparu.
     minuterieDetection = setInterval(() => {
       const longueur = elTranscription.value.trim().length;
-      if (longueur > dernierLongueurDetectee + 120) {
+      if (longueur > dernierLongueurDetectee + 60) {
         detecterSujets();
       }
-    }, 10000);
+    }, 6000);
   }
 
   function arreterDetectionAuto() {

@@ -62,7 +62,7 @@ REGLES DE VERACITE :
 - Indique le niveau de certitude de chaque element : [Confirme par source], [A verifier] ou [Estimation], et l'annee de reference des chiffres.
 - Sur les sujets pointus (fiscalite avancee, transfert de parts, structures corporatives), rappelle qu'une validation par un fiscaliste, CPA ou notaire est requise. Tu es une aide a la decision, pas un avis professionnel definitif.
 
-STYLE : francais quebecois professionnel, clair, concis, oriente action (le conseiller te lit en pleine rencontre).
+STYLE : francais quebecois professionnel, clair, concis, oriente action (le conseiller te lit en pleine rencontre). Reponds DIRECTEMENT et RAPIDEMENT avec les sections demandees, sans afficher de raisonnement, de brouillon ni de preambule.
 
 Reponds TOUJOURS avec exactement ces sections, dans cet ordre, avec ces titres exacts :
 
@@ -92,7 +92,7 @@ function outilsRecherche() {
     {
       type: "web_search_20260209",
       name: "web_search",
-      max_uses: 5,
+      max_uses: 3,
       user_location: { type: "approximate", country: "CA", region: "Quebec" },
     },
   ];
@@ -190,10 +190,27 @@ app.post("/api/generer", async (req, res) => {
     clientFerme = true;
   });
 
-  // Maintien de connexion (evite les coupures sur les longues reponses)
+  const etat = { aEcrit: false };
+
+  // Message immediat pour confirmer que c'est parti
+  envoyerSSE(res, "statut", { message: "Analyse du sujet en cours..." });
+
+  // Maintien de connexion + progression visible tant qu'aucun texte n'est sorti
+  const messagesProgression = [
+    "Analyse du sujet en cours...",
+    "Recherche d'information verifiee...",
+    "Verification des sources officielles...",
+    "Redaction de la reponse...",
+  ];
+  let iProgression = 0;
   const battement = setInterval(() => {
-    if (!clientFerme) res.write(": ping\n\n");
-  }, 12000);
+    if (clientFerme) return;
+    res.write(": ping\n\n");
+    if (!etat.aEcrit) {
+      iProgression = (iProgression + 1) % messagesProgression.length;
+      envoyerSSE(res, "statut", { message: messagesProgression[iProgression] });
+    }
+  }, 4000);
 
   // Securite : ne jamais rester bloque indefiniment
   let delaiDepasse = false;
@@ -211,15 +228,15 @@ app.post("/api/generer", async (req, res) => {
     "Donne l'information sur le sujet ci-dessus, avec les sections demandees.";
 
   // Tente avec la recherche web ; en cas d'echec avant tout texte, repli sans outils.
+  // Reflexion desactivee : la reponse commence a s'afficher rapidement.
   async function lancer(avecOutils) {
     const messages = [{ role: "user", content: messageUtilisateur }];
-    let aEcrit = false;
 
     for (let i = 0; i < MAX_CONTINUATIONS && !clientFerme && !delaiDepasse; i++) {
       const params = {
         model: MODELE,
         max_tokens: 8000,
-        thinking: { type: "adaptive" },
+        thinking: { type: "disabled" },
         output_config: { effort: EFFORT },
         system: CONSIGNE_GENERATION,
         messages,
@@ -237,7 +254,7 @@ app.post("/api/generer", async (req, res) => {
           envoyerSSE(res, "statut", { message: "Recherche de sources verifiees..." });
         }
         if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
-          aEcrit = true;
+          etat.aEcrit = true;
           envoyerSSE(res, "texte", { texte: event.delta.text });
         }
       }
@@ -249,7 +266,7 @@ app.post("/api/generer", async (req, res) => {
       }
       break;
     }
-    return aEcrit;
+    return etat.aEcrit;
   }
 
   try {
@@ -272,6 +289,10 @@ app.post("/api/generer", async (req, res) => {
     if (delaiDepasse && !aEcrit) {
       envoyerSSE(res, "erreur", {
         message: "Le delai a ete depasse. Reessaie (ou mets MODELE=claude-sonnet-4-6 pour aller plus vite).",
+      });
+    } else if (!aEcrit && !clientFerme) {
+      envoyerSSE(res, "erreur", {
+        message: "Aucune reponse generee. Reessaie, ou mets RECHERCHE_WEB=false dans .env.",
       });
     } else if (!clientFerme) {
       envoyerSSE(res, "termine", { ok: true });
