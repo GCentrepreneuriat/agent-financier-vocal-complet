@@ -1,0 +1,19 @@
+{
+  "name": "agent-financier-vocal-complet",
+  "version": "1.0.0",
+  "description": "Agent vocal d'aide a la decision pour rencontres financieres (francais quebecois). Ecoute la rencontre, detecte le sujet et les questions du client, puis fournit sur demande de l'information verifiee avec sources, des questions pertinentes a poser et des directions optimales.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2"
+  }
+}

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent financier vocal</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="entete">
+      <div class="entete-titre">
+        <span class="pastille" id="pastille-etat"></span>
+        <h1>Agent financier vocal</h1>
+      </div>
+      <p class="sous-titre">
+        Aide a la decision en direct pour vos rencontres &middot; francais quebecois
+      </p>
+    </header>
+
+    <main class="grille">
+      <!-- Colonne gauche : ecoute + transcription -->
+      <section class="carte">
+        <div class="carte-entete">
+          <h2>1. Ecoute de la rencontre</h2>
+          <span id="etat-ecoute" class="badge badge-gris">Arrete</span>
+        </div>
+
+        <div class="boutons">
+          <button id="btn-ecoute" class="btn btn-principal">
+            <span class="ico">&#127908;</span> Demarrer l'ecoute
+          </button>
+          <button id="btn-effacer" class="btn btn-secondaire">Effacer</button>
+        </div>
+
+        <label class="etiquette" for="transcription">
+          Transcription (modifiable &mdash; corrigez au besoin)
+        </label>
+        <textarea
+          id="transcription"
+          class="transcription"
+          placeholder="La transcription de la rencontre apparaitra ici. Vous pouvez aussi taper ou coller du texte manuellement."
+        ></textarea>
+        <p id="apercu-temps-reel" class="apercu"></p>
+
+        <button id="btn-executer" class="btn btn-action">
+          <span class="ico">&#9889;</span> Executer l'analyse
+        </button>
+
+        <p id="message-erreur" class="erreur" hidden></p>
+      </section>
+
+      <!-- Colonne droite : analyse -->
+      <section class="carte">
+        <div class="carte-entete">
+          <h2>2. Analyse</h2>
+          <span id="statut-analyse" class="badge badge-gris">En attente</span>
+        </div>
+        <div id="resultat" class="resultat">
+          <div class="vide">
+            <p>
+              Cliquez sur <strong>Executer l'analyse</strong> pour obtenir le
+              sujet detecte, les questions du client, une reponse verifiee avec
+              sources, des questions a poser et des directions optimales.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="pied">
+      <p>
+        <strong>Important :</strong> outil d'aide a la decision. Les informations
+        doivent toujours etre validees a leurs sources officielles. Sur les
+        sujets fiscaux et juridiques pointus, consultez un fiscaliste, CPA ou
+        notaire avant de conseiller le client.
+      </p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
