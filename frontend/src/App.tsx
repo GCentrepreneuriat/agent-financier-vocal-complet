@@ -13,7 +13,7 @@ interface Sante {
 }
 
 export default function App() {
-  const { statut, transcription, partiel, erreur, secondes, fiche, sujet, analyseActive, demarrer, arreter } =
+  const { statut, transcription, partiel, erreur, secondes, fiches, analyseActive, demarrer, arreter } =
     useSession();
   const [capterAppel, setCapterAppel] = useState(false);
   const [sante, setSante] = useState<Sante | null>(null);
@@ -60,7 +60,7 @@ export default function App() {
 
         <div className="grille">
           <TranscriptionPanel transcription={transcription} partiel={partiel} statut={statut} />
-          <ExpertCard fiche={fiche} sujet={sujet} analyseActive={analyseActive} statut={statut} />
+          <ExpertCard fiches={fiches} analyseActive={analyseActive} statut={statut} />
         </div>
       </main>
 

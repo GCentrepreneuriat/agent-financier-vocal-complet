@@ -180,6 +180,16 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 320px;
+  max-height: 75vh;
+}
+.compteur { color: var(--texte-doux); font-weight: 400; }
+.fiche-liste {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 4px;
 }
 .fiche-entete {
   display: flex;
@@ -226,6 +236,18 @@ body {
   padding: 16px;
   background: #192c37;
   animation: apparait 0.25s ease;
+}
+/* La plus récente est mise en évidence */
+.carte-recente {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.carte-heure {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--texte-doux);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 @keyframes apparait {
   from { opacity: 0; transform: translateY(6px); }

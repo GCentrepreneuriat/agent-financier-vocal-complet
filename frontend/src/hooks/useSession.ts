@@ -14,6 +14,14 @@ export interface FicheExpert {
   a_eviter?: string | null;
 }
 
+// Une fiche affichée = une suggestion + son heure d'arrivée (pour l'historique).
+export interface FicheAffichee {
+  id: number;
+  fiche: FicheExpert;
+  sujet: string;
+  heure: string;
+}
+
 interface MessageBackend {
   type: "pret" | "transcript" | "erreur" | "suggestion" | "silence" | "analyse";
   texte?: string;
@@ -32,10 +40,10 @@ export function useSession() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [secondes, setSecondes] = useState(0);
 
-  // Phase 2 : suggestions
-  const [fiche, setFiche] = useState<FicheExpert | null>(null);
-  const [sujet, setSujet] = useState<string>("");
+  // Phase 2 : suggestions (historique empilé, la plus récente en haut)
+  const [fiches, setFiches] = useState<FicheAffichee[]>([]);
   const [analyseActive, setAnalyseActive] = useState(false);
+  const compteurRef = useRef(0);
 
   const wsRef = useRef<WebSocket | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
@@ -92,8 +100,8 @@ export function useSession() {
       setTranscription("");
       setPartiel("");
       setSecondes(0);
-      setFiche(null);
-      setSujet("");
+      setFiches([]);
+      compteurRef.current = 0;
       setAnalyseActive(false);
       majStatut("connexion");
 
@@ -155,8 +163,19 @@ export function useSession() {
               break;
             case "suggestion":
               if (msg.suggestion) {
-                setFiche(msg.suggestion);
-                setSujet(msg.sujet || "");
+                const heure = new Date().toLocaleTimeString("fr-CA", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                });
+                const item: FicheAffichee = {
+                  id: ++compteurRef.current,
+                  fiche: msg.suggestion,
+                  sujet: msg.sujet || "",
+                  heure,
+                };
+                // On empile : la nouvelle en haut, on garde les précédentes (max 50).
+                setFiches((prev) => [item, ...prev].slice(0, 50));
               }
               break;
             case "analyse":
@@ -208,8 +227,7 @@ export function useSession() {
     partiel,
     erreur,
     secondes,
-    fiche,
-    sujet,
+    fiches,
     analyseActive,
     demarrer,
     arreter,
