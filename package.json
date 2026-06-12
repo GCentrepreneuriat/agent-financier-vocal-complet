@@ -1,20 +1,13 @@
 {
-  "name": "agent-financier-vocal-complet",
-  "version": "1.0.0",
-  "description": "Agent vocal d'aide a la decision pour rencontres financieres (francais quebecois). Ecoute la rencontre, detecte le sujet et les questions du client, puis fournit sur demande de l'information verifiee avec sources, des questions pertinentes a poser et des directions optimales.",
+  "name": "agent-financier-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent financier temps reel (monorepo) — frontend React + backend Express/WebSocket.",
   "type": "module",
-  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.71.0",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.2",
-    "ws": "^8.18.0"
+    "postinstall": "npm --prefix backend install && npm --prefix frontend install",
+    "dev": "node scripts/dev.js",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev"
   }
 }

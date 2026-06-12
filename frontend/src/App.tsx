@@ -1,0 +1,55 @@
+import { useEffect, useState } from "react";
+import { useSession } from "./hooks/useSession";
+import { SessionHeader } from "./components/SessionHeader";
+import { Controls } from "./components/Controls";
+import { TranscriptionPanel } from "./components/TranscriptionPanel";
+import { BACKEND_HTTP } from "./lib/config";
+
+export default function App() {
+  const { statut, transcription, partiel, erreur, secondes, demarrer, arreter } = useSession();
+  const [capterAppel, setCapterAppel] = useState(false);
+  const [sante, setSante] = useState<{ ok: boolean; cles_manquantes: string[] } | null>(null);
+
+  // Verifie l'etat du backend au chargement (cles configurees ?)
+  useEffect(() => {
+    fetch(`${BACKEND_HTTP}/api/sante`)
+      .then((r) => r.json())
+      .then(setSante)
+      .catch(() => setSante(null));
+  }, []);
+
+  return (
+    <div className="app">
+      <SessionHeader statut={statut} secondes={secondes} />
+
+      <main className="contenu">
+        {sante && sante.cles_manquantes.length > 0 && (
+          <div className="alerte">
+            Clé(s) manquante(s) dans <code>backend/.env</code> : {sante.cles_manquantes.join(", ")}.
+            La transcription ne fonctionnera pas tant que ce n'est pas configuré.
+          </div>
+        )}
+        {sante === null && (
+          <div className="alerte">
+            Impossible de joindre le backend. Vérifiez qu'il est démarré (port 3001).
+          </div>
+        )}
+        {erreur && <div className="alerte alerte-erreur">{erreur}</div>}
+
+        <Controls
+          statut={statut}
+          capterAppel={capterAppel}
+          setCapterAppel={setCapterAppel}
+          onDemarrer={() => demarrer(capterAppel)}
+          onArreter={arreter}
+        />
+
+        <TranscriptionPanel transcription={transcription} partiel={partiel} statut={statut} />
+      </main>
+
+      <footer className="pied">
+        Phase 1 — MVP audio + transcription · à valider avant la suite
+      </footer>
+    </div>
+  );
+}

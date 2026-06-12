@@ -1,9 +1,14 @@
 node_modules/
+**/node_modules/
 .env
 .env.local
+**/.env
+**/.env.local
 *.log
 npm-debug.log*
 .DS_Store
 .vscode/
 .idea/
 dist/
+**/dist/
+.vite/
