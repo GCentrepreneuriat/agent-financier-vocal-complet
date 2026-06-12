@@ -17,9 +17,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ---------- Configuration ----------
 const PORT = process.env.PORT || 3000;
-const MODELE = process.env.MODELE || "claude-opus-4-8"; // generation (qualite)
+const MODELE = process.env.MODELE || "claude-opus-4-8"; // mode Approfondi (qualite)
+const MODELE_RAPIDE = process.env.MODELE_RAPIDE || "claude-sonnet-4-6"; // mode Rapide
 const MODELE_DETECTION = process.env.MODELE_DETECTION || "claude-haiku-4-5"; // detection (rapide)
-const EFFORT = process.env.EFFORT || "medium"; // low | medium | high
+const EFFORT = process.env.EFFORT || "medium"; // effort du mode Approfondi
 const API_KEY = process.env.ANTHROPIC_API_KEY;
 const RECHERCHE_WEB = (process.env.RECHERCHE_WEB || "true").toLowerCase() !== "false";
 
@@ -87,12 +88,12 @@ app.get("/api/sante", (req, res) => {
   res.json({ ok: true, modele: MODELE, detection: MODELE_DETECTION, rechercheWeb: RECHERCHE_WEB });
 });
 
-function outilsRecherche() {
+function outilsRecherche(maxUses) {
   return [
     {
       type: "web_search_20260209",
       name: "web_search",
-      max_uses: 3,
+      max_uses: maxUses || 3,
       user_location: { type: "approximate", country: "CA", region: "Quebec" },
     },
   ];
@@ -166,9 +167,18 @@ app.post("/api/sujets", async (req, res) => {
 app.post("/api/generer", async (req, res) => {
   const transcription = tronquer((req.body?.transcription || "").toString().trim());
   const sujet = (req.body?.sujet || "").toString().trim().slice(0, 120);
+  const approfondi = (req.body?.mode || "rapide") === "approfondi";
   if (!sujet) {
     return res.status(400).json({ erreur: "Aucun sujet fourni." });
   }
+
+  // Profil selon le mode choisi par l'utilisateur :
+  // - Rapide      : Sonnet, effort faible, pas de recherche web -> reponse rapide
+  // - Approfondi  : Opus, effort moyen, recherche web -> sources verifiees, plus long
+  const modele = approfondi ? MODELE : MODELE_RAPIDE;
+  const effort = approfondi ? EFFORT : "low";
+  const avecWebDefaut = approfondi && RECHERCHE_WEB;
+  const maxTokens = approfondi ? 8000 : 5000;
 
   const messageUtilisateur =
     "SUJET A APPROFONDIR : " +
@@ -179,20 +189,19 @@ app.post("/api/generer", async (req, res) => {
     "\n=== FIN ===\n\n" +
     "Donne l'information sur le sujet ci-dessus, avec les sections demandees.";
 
-  // Un essai complet (avec ou sans recherche web). Gere la pause de l'outil web.
   async function lancer(avecOutils) {
     const messages = [{ role: "user", content: messageUtilisateur }];
     let texte = "";
     for (let i = 0; i < MAX_CONTINUATIONS; i++) {
       const params = {
-        model: MODELE,
-        max_tokens: 8000,
+        model: modele,
+        max_tokens: maxTokens,
         thinking: { type: "disabled" },
-        output_config: { effort: EFFORT },
+        output_config: { effort },
         system: CONSIGNE_GENERATION,
         messages,
       };
-      if (avecOutils) params.tools = outilsRecherche();
+      if (avecOutils) params.tools = outilsRecherche(approfondi ? 3 : 2);
 
       const reponse = await anthropic.messages.create(params, { timeout: DELAI_REQUETE_MS, maxRetries: 1 });
       texte += texteDesBlocs(reponse);
@@ -207,12 +216,12 @@ app.post("/api/generer", async (req, res) => {
 
   try {
     let texte = "";
-    let sansRecherche = false;
+    let sansRecherche = !avecWebDefaut;
     try {
-      texte = await lancer(RECHERCHE_WEB);
+      texte = await lancer(avecWebDefaut);
     } catch (err1) {
       console.error("[generer] echec 1er essai:", err1?.status, err1?.name, err1?.message);
-      if (RECHERCHE_WEB) {
+      if (avecWebDefaut) {
         sansRecherche = true;
         texte = await lancer(false); // repli sans recherche web
       } else {
@@ -221,7 +230,7 @@ app.post("/api/generer", async (req, res) => {
     }
 
     if (!texte) {
-      return res.json({ erreur: "Aucune reponse generee. Reessaie, ou mets RECHERCHE_WEB=false dans .env." });
+      return res.json({ erreur: "Aucune reponse generee. Reessaie." });
     }
     res.json({ texte, sansRecherche });
   } catch (err) {

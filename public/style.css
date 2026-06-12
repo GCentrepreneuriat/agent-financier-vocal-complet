@@ -108,6 +108,27 @@ body {
   color: var(--bleu-fonce);
 }
 
+.entete-droite {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.selecteur {
+  border: 1px solid var(--gris-bord);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--bleu-fonce);
+  background: #fff;
+  cursor: pointer;
+}
+.selecteur:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 .badge {
   font-size: 0.78rem;
   font-weight: 600;

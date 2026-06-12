@@ -61,7 +61,13 @@
       <section class="carte">
         <div class="carte-entete">
           <h2 id="titre-info">3. Information</h2>
-          <span id="statut-analyse" class="badge badge-gris">En attente</span>
+          <div class="entete-droite">
+            <select id="mode-generation" class="selecteur" title="Vitesse de la generation">
+              <option value="rapide" selected>⚡ Rapide</option>
+              <option value="approfondi">🔍 Approfondi (sources web)</option>
+            </select>
+            <span id="statut-analyse" class="badge badge-gris">En attente</span>
+          </div>
         </div>
         <div id="resultat" class="resultat">
           <div class="vide">

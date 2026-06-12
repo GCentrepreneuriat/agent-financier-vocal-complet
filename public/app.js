@@ -22,6 +22,7 @@
   const btnEcoute = document.getElementById("btn-ecoute");
   const btnEffacer = document.getElementById("btn-effacer");
   const btnDetecter = document.getElementById("btn-detecter");
+  const selMode = document.getElementById("mode-generation");
 
   // ---------- Etat ----------
   let reconnaissance = null;
@@ -127,25 +128,25 @@
 
   // ---------- Detection des sujets ----------
   function planifierDetection() {
-    // Detecte ~2,5 s apres la derniere parole, si assez de nouveau texte.
+    // Detecte ~1,5 s apres la derniere parole, si assez de nouveau texte.
     if (minuterieSaisie) clearTimeout(minuterieSaisie);
     minuterieSaisie = setTimeout(() => {
-      if (elTranscription.value.trim().length > dernierLongueurDetectee + 40) {
+      if (elTranscription.value.trim().length > dernierLongueurDetectee + 35) {
         detecterSujets();
       }
-    }, 2500);
+    }, 1500);
   }
 
   function demarrerDetectionAuto() {
     if (minuterieDetection) return;
     setTimeout(() => {
       if (enEcoute) detecterSujets();
-    }, 2500);
+    }, 2000);
     minuterieDetection = setInterval(() => {
-      if (elTranscription.value.trim().length > dernierLongueurDetectee + 40) {
+      if (elTranscription.value.trim().length > dernierLongueurDetectee + 35) {
         detecterSujets();
       }
-    }, 5000);
+    }, 4000);
   }
 
   function arreterDetectionAuto() {
@@ -259,10 +260,11 @@
     }, 3000);
 
     try {
+      const mode = selMode ? selMode.value : "rapide";
       const reponse = await fetch("/api/generer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcription, sujet: titreSujet }),
+        body: JSON.stringify({ transcription, sujet: titreSujet, mode }),
       });
       const data = await reponse.json().catch(() => ({}));
 
