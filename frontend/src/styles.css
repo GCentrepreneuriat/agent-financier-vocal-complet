@@ -40,6 +40,47 @@ body {
   .grille { grid-template-columns: 1fr; }
 }
 
+/* Écran de connexion */
+.login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: radial-gradient(circle at 50% 0%, var(--bleu-clair), var(--fond) 60%);
+}
+.login-carte {
+  width: 100%;
+  max-width: 360px;
+  background: var(--carte);
+  border: 1px solid var(--bord);
+  border-radius: 16px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+.login-marque {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--texte-doux);
+  text-transform: uppercase;
+}
+.login-titre { margin: 0; font-size: 1.5rem; }
+.login-sous { margin: 0 0 4px; color: var(--texte-doux); font-size: 0.9rem; }
+.login-champ {
+  background: #0f1c24;
+  border: 1px solid var(--bord);
+  border-radius: 10px;
+  padding: 13px 14px;
+  color: var(--texte);
+  font-size: 1rem;
+}
+.login-champ:focus { outline: none; border-color: var(--accent); }
+.login-erreur { color: #f0a99a; font-size: 0.85rem; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+
 /* En-tete */
 .entete {
   display: flex;

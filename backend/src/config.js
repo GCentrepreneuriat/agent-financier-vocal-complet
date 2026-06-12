@@ -6,6 +6,12 @@ dotenv.config({ override: true });
 
 export const PORT = process.env.PORT || 3001;
 export const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
+export const PRODUCTION = process.env.NODE_ENV === "production";
+
+// Protection par mot de passe (app en ligne). Si APP_PASSWORD est vide,
+// l'accès est libre (utile en développement local).
+export const APP_PASSWORD = process.env.APP_PASSWORD || "";
+export const AUTH_SECRET = process.env.AUTH_SECRET || "secret-local-par-defaut";
 
 export const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY || "";
 export const DEEPGRAM_MODEL = process.env.DEEPGRAM_MODEL || "nova-3";

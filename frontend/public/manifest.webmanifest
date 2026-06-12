@@ -1,0 +1,16 @@
+{
+  "name": "Agent financier",
+  "short_name": "Agent",
+  "description": "Assistant temps réel pour conseiller en sécurité financière",
+  "lang": "fr-CA",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f1c24",
+  "theme_color": "#143850",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

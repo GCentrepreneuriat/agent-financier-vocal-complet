@@ -3,6 +3,7 @@
 // ET des suggestions (fiche d'expert) générées par l'agent.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BACKEND_WS } from "../lib/config";
+import { getToken, clearToken } from "../lib/auth";
 
 export type StatutSession = "inactif" | "connexion" | "ecoute" | "erreur";
 
@@ -134,7 +135,8 @@ export function useSession() {
         proc.connect(muet);
 
         const sr = Math.round(ctx.sampleRate);
-        const ws = new WebSocket(`${BACKEND_WS}/audio?sr=${sr}`);
+        const token = encodeURIComponent(getToken());
+        const ws = new WebSocket(`${BACKEND_WS}/audio?sr=${sr}&token=${token}`);
         ws.binaryType = "arraybuffer";
         wsRef.current = ws;
 
@@ -191,7 +193,12 @@ export function useSession() {
         };
 
         ws.onerror = () => setErreur("Connexion au serveur interrompue.");
-        ws.onclose = () => {
+        ws.onclose = (ev) => {
+          if (ev.code === 1008) {
+            // Jeton refusé : on force une reconnexion
+            clearToken();
+            setErreur("Session expirée. Recharge la page et reconnecte-toi.");
+          }
           if (statutRef.current === "ecoute") arreter();
         };
 

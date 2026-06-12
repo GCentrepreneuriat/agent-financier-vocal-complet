@@ -76,6 +76,24 @@ Audio → Deepgram (transcription) → Détection (Claude Haiku, rapide/économe
 
 ---
 
+## Mettre en ligne (app web installable)
+
+L'app se déploie comme **un seul service** (le backend sert l'interface, l'API et le WebSocket) sur **Render** (https://render.com — plan gratuit). Une fois en ligne : une adresse web, protégée par mot de passe, **installable** sur ordinateur et téléphone (PWA).
+
+1. Pousser le code sur GitHub (déjà fait).
+2. Sur Render : **New → Blueprint**, connecter ce dépôt et choisir la branche. Render lit `render.yaml`.
+3. Renseigner les variables (onglet **Environment**) :
+   - `DEEPGRAM_API_KEY` — ta clé Deepgram
+   - `ANTHROPIC_API_KEY` — ta clé Anthropic
+   - `APP_PASSWORD` — **le mot de passe de ton choix** pour accéder à l'app
+   - `AUTH_SECRET` — généré automatiquement
+4. Déployer. Render fournit une adresse `https://...onrender.com`.
+5. Ouvre l'adresse, entre ton mot de passe, puis **« Installer l'application »** (Chrome/Edge : icône dans la barre d'adresse) pour l'avoir comme une vraie app.
+
+> Plan gratuit : le service se met en veille après ~15 min d'inactivité (réveil en ~30 s au prochain accès). Pour un démarrage instantané, passer au plan payant (~7 $/mois).
+
+Chaque `git push` sur la branche redéploie automatiquement l'app en ligne.
+
 ## Notes techniques (Phase 1)
 
 - **Audio** : capture via Web Audio en **PCM brut (linear16)** envoyé au backend par WebSocket. *(Choix volontaire vs `MediaRecorder` du cahier de charges : le PCM brut est plus fiable pour le streaming Deepgram — éprouvé et fonctionnel. À confirmer.)*

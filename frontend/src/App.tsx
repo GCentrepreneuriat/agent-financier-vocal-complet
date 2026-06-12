@@ -4,11 +4,14 @@ import { SessionHeader } from "./components/SessionHeader";
 import { Controls } from "./components/Controls";
 import { TranscriptionPanel } from "./components/TranscriptionPanel";
 import { ExpertCard } from "./components/ExpertCard";
+import { Login } from "./components/Login";
 import { BACKEND_HTTP } from "./lib/config";
+import { getToken } from "./lib/auth";
 
 interface Sante {
   ok: boolean;
   cles_manquantes: string[];
+  auth?: boolean;
   anthropic?: { actif: boolean };
 }
 
@@ -17,14 +20,28 @@ export default function App() {
     useSession();
   const [capterAppel, setCapterAppel] = useState(false);
   const [sante, setSante] = useState<Sante | null>(null);
+  const [authOK, setAuthOK] = useState(false);
 
-  // Verifie l'etat du backend au chargement (cles configurees ?)
+  // Verifie l'etat du backend au chargement (cles + auth)
   useEffect(() => {
     fetch(`${BACKEND_HTTP}/api/sante`)
       .then((r) => r.json())
       .then(setSante)
       .catch(() => setSante(null));
   }, []);
+
+  // Décide si l'écran de connexion est nécessaire
+  useEffect(() => {
+    if (sante) {
+      if (!sante.auth) setAuthOK(true);
+      else if (getToken()) setAuthOK(true);
+    }
+  }, [sante]);
+
+  // Écran de connexion (si accès protégé et pas encore authentifié)
+  if (sante && sante.auth && !authOK) {
+    return <Login onSucces={() => setAuthOK(true)} />;
+  }
 
   return (
     <div className="app">

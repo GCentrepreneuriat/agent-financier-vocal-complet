@@ -1,0 +1,27 @@
+# Déploiement Render — une seule application (sert l'interface + l'API + le WebSocket).
+# Crée le service automatiquement depuis ce dépôt (Blueprint), puis renseigne
+# les variables marquées « sync: false » dans le tableau de bord Render.
+services:
+  - type: web
+    name: agent-financier
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/sante
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: APP_PASSWORD
+        sync: false
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: DEEPGRAM_MODEL
+        value: nova-3
+      - key: DEEPGRAM_LANG
+        value: fr-CA
