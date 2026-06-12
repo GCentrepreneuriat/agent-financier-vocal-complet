@@ -5,7 +5,7 @@
   "description": "Agent financier temps reel (monorepo) — frontend React + backend Express/WebSocket.",
   "type": "module",
   "scripts": {
-    "postinstall": "npm --prefix backend install && npm --prefix frontend install",
+    "postinstall": "npm --prefix backend install --include=dev && npm --prefix frontend install --include=dev",
     "dev": "node scripts/dev.js",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
