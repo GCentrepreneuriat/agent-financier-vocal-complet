@@ -215,6 +215,17 @@ body {
   font-style: italic;
 }
 
+.case-appel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 2px 14px;
+  font-size: 0.86rem;
+  color: var(--gris-texte);
+  cursor: pointer;
+}
+.case-appel input { cursor: pointer; }
+
 .erreur {
   margin-top: 12px;
   padding: 10px 14px;

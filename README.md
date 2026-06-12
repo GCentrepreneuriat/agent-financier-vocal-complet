@@ -70,6 +70,22 @@ http://localhost:3000
 
 ---
 
+## 🎙️ Transcription Pro avec Deepgram (recommandé)
+
+Par défaut, l'app utilise le moteur de transcription **gratuit** du navigateur (précision limitée en québécois). Pour une transcription **précise et fluide**, branchez **Deepgram** :
+
+1. Créez un compte sur **https://console.deepgram.com/** (crédit d'essai gratuit).
+2. Copiez votre clé d'API (commence par un long code).
+3. Dans votre fichier `.env`, ajoutez la ligne :
+   ```
+   DEEPGRAM_API_KEY=votre-cle-deepgram
+   ```
+4. Relancez `npm start`. En haut à gauche, l'indicateur passe à **« Transcription Pro »**.
+
+Une case **« Capter aussi l'audio de l'appel »** apparaît alors : cochez-la pour partager l'onglet de l'appel (Zoom/Teams/Meet) et capter **les deux interlocuteurs**, même au casque. *(La clé Deepgram reste sur votre serveur, jamais exposée au navigateur.)*
+
+---
+
 ## 📞 Rencontres en visioconférence — comment capter l'audio
 
 La transcription gratuite (intégrée à Chrome/Edge) écoute **le microphone** de votre ordinateur. Pour capter **les deux côtés** d'un appel Zoom/Teams/Meet, le plus simple :
@@ -89,6 +105,9 @@ Cette approche fonctionne bien pour démarrer. Pour une **précision maximale** 
 | `MODELE_DETECTION`  | Modèle rapide pour détecter les sujets                | `claude-haiku-4-5` |
 | `EFFORT`            | Profondeur de réflexion : `low`, `medium`, `high`     | `medium`          |
 | `RECHERCHE_WEB`     | Recherche web (`true`/`false`). Repli auto si indispo. | `true`            |
+| `DEEPGRAM_API_KEY`  | Clé Deepgram pour la transcription Pro (optionnel)    | — (gratuit si vide) |
+| `DEEPGRAM_MODEL`    | Modèle Deepgram : `nova-2` ou `nova-3`                | `nova-2`          |
+| `DEEPGRAM_LANG`     | Langue : `fr-CA` ou `fr`                              | `fr-CA`           |
 | `PORT`              | Port du serveur local                                 | `3000`            |
 
 Pour des réponses **plus rapides** en rencontre, vous pouvez mettre `MODELE=claude-sonnet-4-6`.

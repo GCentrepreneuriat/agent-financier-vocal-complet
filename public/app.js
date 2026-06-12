@@ -23,12 +23,23 @@
   const btnEffacer = document.getElementById("btn-effacer");
   const btnDetecter = document.getElementById("btn-detecter");
   const selMode = document.getElementById("mode-generation");
+  const elModeTranscription = document.getElementById("mode-transcription");
+  const blocCapterAppel = document.getElementById("bloc-capter-appel");
+  const caseCapterAppel = document.getElementById("capter-appel");
 
   // ---------- Etat ----------
   let reconnaissance = null;
   let enEcoute = false;
   let generationEnCours = false;
   let texteFinalise = elTranscription.value || "";
+
+  // Transcription : "deepgram" (si dispo cote serveur) ou "webspeech" (gratuit)
+  let deepgramDispo = false;
+  // Objets Deepgram (audio + WebSocket)
+  let dgSocket = null;
+  let dgAudioCtx = null;
+  let dgProcesseur = null;
+  let dgFlux = []; // MediaStreams a stopper a l'arret
 
   const sujets = new Map(); // cle normalisee -> { titre, categorie, nouveau }
   let detectionEnCours = false;
@@ -81,17 +92,23 @@
     return r;
   }
 
-  function demarrerEcoute() {
+  // Dispatcher : Deepgram si disponible, sinon moteur gratuit du navigateur
+  async function demarrerEcoute() {
     masquerErreur();
-    if (!SR) {
-      afficherErreur("Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Google Chrome ou Microsoft Edge (ordinateur). Vous pouvez aussi taper ou coller la transcription.");
-      return;
-    }
-    if (!reconnaissance) reconnaissance = initReconnaissance();
     texteFinalise = elTranscription.value ? elTranscription.value.trim() + " " : "";
-    try {
-      reconnaissance.start();
-    } catch (_) {}
+    if (deepgramDispo) {
+      const ok = await demarrerDeepgram();
+      if (!ok) return;
+    } else {
+      if (!SR) {
+        afficherErreur("Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Google Chrome ou Microsoft Edge (ordinateur). Vous pouvez aussi taper ou coller la transcription.");
+        return;
+      }
+      if (!reconnaissance) reconnaissance = initReconnaissance();
+      try {
+        reconnaissance.start();
+      } catch (_) {}
+    }
     enEcoute = true;
     majInterfaceEcoute();
     demarrerDetectionAuto();
@@ -99,7 +116,9 @@
 
   function arreterEcoute() {
     enEcoute = false;
-    if (reconnaissance) {
+    if (deepgramDispo) {
+      arreterDeepgram();
+    } else if (reconnaissance) {
       try {
         reconnaissance.stop();
       } catch (_) {}
@@ -108,6 +127,114 @@
     majInterfaceEcoute();
     arreterDetectionAuto();
     detecterSujets(); // une derniere detection a l'arret
+  }
+
+  // ---------- Moteur Deepgram (PCM brut via WebSocket) ----------
+  async function demarrerDeepgram() {
+    try {
+      // 1) Micro (toujours) + audio de l'appel (optionnel)
+      const fluxMicro = await navigator.mediaDevices.getUserMedia({ audio: true });
+      dgFlux.push(fluxMicro);
+
+      let fluxAppel = null;
+      if (caseCapterAppel && caseCapterAppel.checked) {
+        try {
+          fluxAppel = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+          dgFlux.push(fluxAppel);
+        } catch (_) {
+          afficherErreur("Partage d'audio de l'appel annule. On continue avec le micro seulement.");
+        }
+      }
+
+      // 2) Melange micro + appel via Web Audio
+      dgAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const destinationMuette = dgAudioCtx.createGain();
+      destinationMuette.gain.value = 0; // evite l'echo dans les haut-parleurs
+      destinationMuette.connect(dgAudioCtx.destination);
+
+      dgProcesseur = dgAudioCtx.createScriptProcessor(4096, 1, 1);
+      dgAudioCtx.createMediaStreamSource(fluxMicro).connect(dgProcesseur);
+      if (fluxAppel && fluxAppel.getAudioTracks().length > 0) {
+        dgAudioCtx.createMediaStreamSource(fluxAppel).connect(dgProcesseur);
+      }
+      dgProcesseur.connect(destinationMuette);
+
+      // 3) WebSocket vers notre serveur (qui relaie a Deepgram)
+      const sr = Math.round(dgAudioCtx.sampleRate);
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      dgSocket = new WebSocket(`${proto}://${location.host}/ws/transcription?sr=${sr}`);
+      dgSocket.binaryType = "arraybuffer";
+
+      dgSocket.onmessage = (ev) => {
+        let msg;
+        try {
+          msg = JSON.parse(ev.data);
+        } catch (_) {
+          return;
+        }
+        if (msg.type === "transcript" && msg.texte) {
+          if (msg.final) {
+            texteFinalise = (texteFinalise + " " + msg.texte).replace(/\s+/g, " ");
+            elTranscription.value = texteFinalise.trim();
+            elApercu.textContent = "";
+            elTranscription.scrollTop = elTranscription.scrollHeight;
+            planifierDetection();
+          } else {
+            elApercu.textContent = "… " + msg.texte;
+          }
+        } else if (msg.type === "erreur") {
+          afficherErreur(msg.message || "Erreur de transcription.");
+        }
+      };
+      dgSocket.onerror = () => afficherErreur("Connexion de transcription interrompue.");
+
+      // 4) Envoi du PCM (Int16) quand l'audio arrive
+      dgProcesseur.onaudioprocess = (e) => {
+        if (!dgSocket || dgSocket.readyState !== WebSocket.OPEN) return;
+        const entree = e.inputBuffer.getChannelData(0);
+        const pcm = new Int16Array(entree.length);
+        for (let i = 0; i < entree.length; i++) {
+          let s = Math.max(-1, Math.min(1, entree[i]));
+          pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+        }
+        dgSocket.send(pcm.buffer);
+      };
+
+      // Si l'utilisateur arrete le partage d'onglet, on arrete proprement.
+      if (fluxAppel) {
+        fluxAppel.getVideoTracks().forEach((t) => (t.onended = () => arreterEcoute()));
+      }
+      return true;
+    } catch (err) {
+      console.error(err);
+      afficherErreur("Acces au micro refuse ou indisponible. Autorisez le microphone, puis reessayez.");
+      arreterDeepgram();
+      return false;
+    }
+  }
+
+  function arreterDeepgram() {
+    try {
+      if (dgProcesseur) {
+        dgProcesseur.onaudioprocess = null;
+        dgProcesseur.disconnect();
+      }
+    } catch (_) {}
+    try {
+      if (dgSocket && dgSocket.readyState === WebSocket.OPEN) dgSocket.close();
+    } catch (_) {}
+    try {
+      if (dgAudioCtx) dgAudioCtx.close();
+    } catch (_) {}
+    for (const flux of dgFlux) {
+      try {
+        flux.getTracks().forEach((t) => t.stop());
+      } catch (_) {}
+    }
+    dgFlux = [];
+    dgProcesseur = null;
+    dgSocket = null;
+    dgAudioCtx = null;
   }
 
   function majInterfaceEcoute() {
@@ -391,8 +518,27 @@
     }
   });
 
-  if (!SR) {
-    elEtatEcoute.textContent = "Vocal indisponible";
-    elEtatEcoute.className = "badge badge-erreur";
+  // ---------- Initialisation : quel moteur de transcription ? ----------
+  async function init() {
+    try {
+      const r = await fetch("/api/sante");
+      const s = await r.json();
+      deepgramDispo = !!s.deepgram;
+    } catch (_) {}
+
+    if (deepgramDispo) {
+      elModeTranscription.textContent = "Transcription Pro";
+      elModeTranscription.className = "badge badge-actif";
+      if (blocCapterAppel) blocCapterAppel.hidden = false;
+    } else {
+      elModeTranscription.textContent = "Transcription gratuite";
+      elModeTranscription.className = "badge badge-gris";
+      if (!SR) {
+        elEtatEcoute.textContent = "Vocal indisponible";
+        elEtatEcoute.className = "badge badge-erreur";
+      }
+    }
   }
+
+  init();
 })();

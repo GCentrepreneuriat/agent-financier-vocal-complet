@@ -21,7 +21,10 @@
     <section class="carte carte-pleine">
       <div class="carte-entete">
         <h2>1. Ecoute de la rencontre</h2>
-        <span id="etat-ecoute" class="badge badge-gris">Arrete</span>
+        <div class="entete-droite">
+          <span id="mode-transcription" class="badge badge-gris" title="Moteur de transcription">…</span>
+          <span id="etat-ecoute" class="badge badge-gris">Arrete</span>
+        </div>
       </div>
       <div class="boutons">
         <button id="btn-ecoute" class="btn btn-principal">
@@ -29,6 +32,10 @@
         </button>
         <button id="btn-effacer" class="btn btn-secondaire">Effacer</button>
       </div>
+      <label class="case-appel" id="bloc-capter-appel" hidden>
+        <input type="checkbox" id="capter-appel" />
+        Capter aussi l'audio de l'appel (partage d'onglet &mdash; recommande en visio au casque)
+      </label>
       <label class="etiquette" for="transcription">
         Transcription en direct (modifiable &mdash; corrigez au besoin)
       </label>

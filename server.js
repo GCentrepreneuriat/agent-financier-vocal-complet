@@ -12,6 +12,7 @@ import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Anthropic from "@anthropic-ai/sdk";
+import { WebSocketServer, WebSocket } from "ws";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -23,6 +24,11 @@ const MODELE_DETECTION = process.env.MODELE_DETECTION || "claude-haiku-4-5"; // 
 const EFFORT = process.env.EFFORT || "medium"; // effort du mode Approfondi
 const API_KEY = process.env.ANTHROPIC_API_KEY;
 const RECHERCHE_WEB = (process.env.RECHERCHE_WEB || "true").toLowerCase() !== "false";
+
+// Transcription Deepgram (optionnelle). Si absente, on utilise le moteur gratuit du navigateur.
+const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY || "";
+const DEEPGRAM_MODEL = process.env.DEEPGRAM_MODEL || "nova-2";
+const DEEPGRAM_LANG = process.env.DEEPGRAM_LANG || "fr-CA";
 
 const MAX_CARACTERES_TRANSCRIPTION = 24000;
 const MAX_CONTINUATIONS = 4;
@@ -85,7 +91,13 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/api/sante", (req, res) => {
-  res.json({ ok: true, modele: MODELE, detection: MODELE_DETECTION, rechercheWeb: RECHERCHE_WEB });
+  res.json({
+    ok: true,
+    modele: MODELE,
+    detection: MODELE_DETECTION,
+    rechercheWeb: RECHERCHE_WEB,
+    deepgram: !!DEEPGRAM_API_KEY,
+  });
 });
 
 function outilsRecherche(maxUses) {
@@ -239,8 +251,85 @@ app.post("/api/generer", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+const serveur = app.listen(PORT, () => {
   console.log(`\n  Agent financier vocal demarre.`);
   console.log(`  Ouvre Chrome/Edge sur : http://localhost:${PORT}`);
-  console.log(`  Generation : ${MODELE}  |  Detection : ${MODELE_DETECTION}  |  Recherche web : ${RECHERCHE_WEB}\n`);
+  console.log(`  Generation : ${MODELE}  |  Detection : ${MODELE_DETECTION}  |  Recherche web : ${RECHERCHE_WEB}`);
+  console.log(`  Transcription : ${DEEPGRAM_API_KEY ? "Deepgram (" + DEEPGRAM_MODEL + ", " + DEEPGRAM_LANG + ")" : "moteur gratuit du navigateur"}\n`);
 });
+
+// ---------- Pont WebSocket : navigateur -> serveur -> Deepgram ----------
+// L'audio (PCM brut) arrive du navigateur, on le relaie a Deepgram, et on
+// renvoie les transcriptions. La cle Deepgram ne quitte jamais le serveur.
+if (DEEPGRAM_API_KEY) {
+  const wss = new WebSocketServer({ server: serveur, path: "/ws/transcription" });
+
+  wss.on("connection", (client, req) => {
+    let sr = "48000";
+    try {
+      sr = new URL(req.url, "http://localhost").searchParams.get("sr") || "48000";
+    } catch (_) {}
+
+    const urlDg =
+      "wss://api.deepgram.com/v1/listen" +
+      "?model=" + encodeURIComponent(DEEPGRAM_MODEL) +
+      "&language=" + encodeURIComponent(DEEPGRAM_LANG) +
+      "&encoding=linear16&sample_rate=" + encodeURIComponent(sr) +
+      "&channels=1&smart_format=true&punctuate=true&interim_results=true&endpointing=300";
+
+    const dg = new WebSocket(urlDg, { headers: { Authorization: "Token " + DEEPGRAM_API_KEY } });
+    const fileAttente = [];
+    let dgOuvert = false;
+
+    dg.on("open", () => {
+      dgOuvert = true;
+      for (const b of fileAttente) dg.send(b);
+      fileAttente.length = 0;
+      try { client.send(JSON.stringify({ type: "pret" })); } catch (_) {}
+    });
+
+    dg.on("message", (data) => {
+      try {
+        const msg = JSON.parse(data.toString());
+        const alt = msg?.channel?.alternatives?.[0];
+        const texte = alt?.transcript || "";
+        if (texte) {
+          client.send(JSON.stringify({ type: "transcript", texte, final: !!msg.is_final }));
+        }
+      } catch (_) {}
+    });
+
+    dg.on("error", (e) => {
+      console.error("[Deepgram]", e?.message || e);
+      try { client.send(JSON.stringify({ type: "erreur", message: "Connexion Deepgram impossible (verifie DEEPGRAM_API_KEY)." })); } catch (_) {}
+    });
+
+    dg.on("close", () => {
+      try { client.close(); } catch (_) {}
+    });
+
+    // Deepgram ferme apres ~10 s sans audio : on garde la connexion vivante.
+    const battement = setInterval(() => {
+      if (dgOuvert && dg.readyState === WebSocket.OPEN) {
+        try { dg.send(JSON.stringify({ type: "KeepAlive" })); } catch (_) {}
+      }
+    }, 7000);
+
+    client.on("message", (data) => {
+      if (dgOuvert && dg.readyState === WebSocket.OPEN) dg.send(data);
+      else fileAttente.push(data);
+    });
+
+    client.on("close", () => {
+      clearInterval(battement);
+      try {
+        if (dg.readyState === WebSocket.OPEN) {
+          dg.send(JSON.stringify({ type: "CloseStream" }));
+          dg.close();
+        }
+      } catch (_) {}
+    });
+  });
+
+  console.log("  Pont de transcription Deepgram : actif (/ws/transcription)\n");
+}
