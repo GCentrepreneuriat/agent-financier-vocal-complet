@@ -26,8 +26,18 @@ body {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  max-width: 860px;
+  max-width: 1140px;
   margin: 0 auto;
+}
+
+/* Deux colonnes : transcription + fiche d'expert */
+.grille {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 760px) {
+  .grille { grid-template-columns: 1fr; }
 }
 
 /* En-tete */
@@ -160,6 +170,116 @@ body {
 .transcription .texte { margin: 0; }
 .transcription .partiel { color: var(--texte-doux); font-style: italic; }
 .transcription .vide { color: var(--texte-doux); font-size: 1rem; }
+
+/* Fiche d'expert */
+.fiche {
+  background: var(--carte);
+  border: 1px solid var(--bord);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+}
+.fiche-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.fiche-titre-section {
+  margin: 0;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--texte-doux);
+}
+.analyse-indic {
+  font-size: 0.78rem;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.analyse-indic::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.2s infinite;
+}
+.fiche-vide {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--texte-doux);
+  font-size: 0.95rem;
+  padding: 0 10px;
+}
+
+.carte {
+  border: 1px solid var(--bord);
+  border-radius: 12px;
+  padding: 16px;
+  background: #192c37;
+  animation: apparait 0.25s ease;
+}
+@keyframes apparait {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.carte-tete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #fff;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.carte-titre {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--texte);
+}
+.carte-points {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  line-height: 1.55;
+}
+.carte-points li { margin-bottom: 6px; }
+.carte-bloc {
+  border-radius: 9px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+.carte-bloc p { margin: 4px 0 0; line-height: 1.45; }
+.carte-etiq {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--texte-doux);
+}
+.carte-question {
+  background: rgba(47, 128, 184, 0.12);
+  border: 1px solid rgba(47, 128, 184, 0.35);
+}
+.carte-eviter {
+  background: rgba(192, 57, 43, 0.12);
+  border: 1px solid rgba(192, 57, 43, 0.35);
+}
 
 /* Pied */
 .pied {

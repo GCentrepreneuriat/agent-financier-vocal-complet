@@ -9,8 +9,10 @@ import { DEEPGRAM_API_KEY, DEEPGRAM_MODEL, DEEPGRAM_LANG } from "./config.js";
  * Branche un client navigateur (clientWs) a une session Deepgram.
  * @param {import('ws').WebSocket} clientWs  Connexion vers le navigateur
  * @param {number} sampleRate                Frequence d'echantillonnage de l'audio
+ * @param {{ onFinal?: (texte: string) => void }} options  Rappel sur segment final
  */
-export function brancherDeepgram(clientWs, sampleRate) {
+export function brancherDeepgram(clientWs, sampleRate, options = {}) {
+  const onFinal = typeof options.onFinal === "function" ? options.onFinal : null;
   const sr = Number.isFinite(sampleRate) && sampleRate > 0 ? Math.round(sampleRate) : 48000;
 
   const url =
@@ -49,6 +51,7 @@ export function brancherDeepgram(clientWs, sampleRate) {
       const texte = alt?.transcript || "";
       if (texte) {
         envoyerClient({ type: "transcript", texte, final: !!msg.is_final });
+        if (msg.is_final && onFinal) onFinal(texte);
       }
     } catch (_) {}
   });

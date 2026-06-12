@@ -3,12 +3,20 @@ import { useSession } from "./hooks/useSession";
 import { SessionHeader } from "./components/SessionHeader";
 import { Controls } from "./components/Controls";
 import { TranscriptionPanel } from "./components/TranscriptionPanel";
+import { ExpertCard } from "./components/ExpertCard";
 import { BACKEND_HTTP } from "./lib/config";
 
+interface Sante {
+  ok: boolean;
+  cles_manquantes: string[];
+  anthropic?: { actif: boolean };
+}
+
 export default function App() {
-  const { statut, transcription, partiel, erreur, secondes, demarrer, arreter } = useSession();
+  const { statut, transcription, partiel, erreur, secondes, fiche, sujet, analyseActive, demarrer, arreter } =
+    useSession();
   const [capterAppel, setCapterAppel] = useState(false);
-  const [sante, setSante] = useState<{ ok: boolean; cles_manquantes: string[] } | null>(null);
+  const [sante, setSante] = useState<Sante | null>(null);
 
   // Verifie l'etat du backend au chargement (cles configurees ?)
   useEffect(() => {
@@ -34,6 +42,12 @@ export default function App() {
             Impossible de joindre le backend. Vérifiez qu'il est démarré (port 3001).
           </div>
         )}
+        {sante && sante.anthropic && !sante.anthropic.actif && (
+          <div className="alerte">
+            Suggestions désactivées : ajoutez <code>ANTHROPIC_API_KEY</code> dans <code>backend/.env</code>.
+            La transcription fonctionne quand même.
+          </div>
+        )}
         {erreur && <div className="alerte alerte-erreur">{erreur}</div>}
 
         <Controls
@@ -44,11 +58,14 @@ export default function App() {
           onArreter={arreter}
         />
 
-        <TranscriptionPanel transcription={transcription} partiel={partiel} statut={statut} />
+        <div className="grille">
+          <TranscriptionPanel transcription={transcription} partiel={partiel} statut={statut} />
+          <ExpertCard fiche={fiche} sujet={sujet} analyseActive={analyseActive} statut={statut} />
+        </div>
       </main>
 
       <footer className="pied">
-        Phase 1 — MVP audio + transcription · à valider avant la suite
+        Phase 2 — suggestions temps réel · à valider avant la suite
       </footer>
     </div>
   );

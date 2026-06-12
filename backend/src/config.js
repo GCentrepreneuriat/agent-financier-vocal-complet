@@ -12,6 +12,9 @@ export const DEEPGRAM_MODEL = process.env.DEEPGRAM_MODEL || "nova-3";
 export const DEEPGRAM_LANG = process.env.DEEPGRAM_LANG || "fr-CA";
 
 export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
+// Modele rapide pour la detection, modele plus fort pour les suggestions.
+export const DETECTION_MODEL = process.env.DETECTION_MODEL || "claude-haiku-4-5";
+export const ORCHESTRATEUR_MODEL = process.env.ORCHESTRATEUR_MODEL || "claude-sonnet-4-6";
 
 // Verifie au demarrage les cles requises pour la phase courante (Phase 1 = Deepgram).
 export function verifierConfig() {

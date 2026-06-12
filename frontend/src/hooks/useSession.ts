@@ -1,15 +1,28 @@
 // Hook de session : capture audio (micro + audio d'appel optionnel),
-// streaming PCM vers le backend, reception de la transcription temps reel.
+// streaming PCM vers le backend, réception de la transcription temps réel
+// ET des suggestions (fiche d'expert) générées par l'agent.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BACKEND_WS } from "../lib/config";
 
 export type StatutSession = "inactif" | "connexion" | "ecoute" | "erreur";
 
+export interface FicheExpert {
+  titre?: string;
+  categorie?: string;
+  points_cles?: string[];
+  question_relance?: string | null;
+  a_eviter?: string | null;
+}
+
 interface MessageBackend {
-  type: "pret" | "transcript" | "erreur";
+  type: "pret" | "transcript" | "erreur" | "suggestion" | "silence" | "analyse";
   texte?: string;
   final?: boolean;
   message?: string;
+  suggestion?: FicheExpert;
+  categorie?: string;
+  sujet?: string;
+  actif?: boolean;
 }
 
 export function useSession() {
@@ -18,6 +31,11 @@ export function useSession() {
   const [partiel, setPartiel] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [secondes, setSecondes] = useState(0);
+
+  // Phase 2 : suggestions
+  const [fiche, setFiche] = useState<FicheExpert | null>(null);
+  const [sujet, setSujet] = useState<string>("");
+  const [analyseActive, setAnalyseActive] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
@@ -63,6 +81,7 @@ export function useSession() {
     }
     fluxRef.current = [];
     setPartiel("");
+    setAnalyseActive(false);
     majStatut("inactif");
   }, []);
 
@@ -73,10 +92,12 @@ export function useSession() {
       setTranscription("");
       setPartiel("");
       setSecondes(0);
+      setFiche(null);
+      setSujet("");
+      setAnalyseActive(false);
       majStatut("connexion");
 
       try {
-        // 1) Micro (toujours) + audio de l'appel (optionnel, partage d'onglet)
         const micro = await navigator.mediaDevices.getUserMedia({ audio: true });
         fluxRef.current.push(micro);
 
@@ -90,11 +111,10 @@ export function useSession() {
           }
         }
 
-        // 2) Melange via Web Audio, conversion en PCM
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
         ctxRef.current = ctx;
         const muet = ctx.createGain();
-        muet.gain.value = 0; // pas d'echo dans les haut-parleurs
+        muet.gain.value = 0;
         muet.connect(ctx.destination);
 
         const proc = ctx.createScriptProcessor(4096, 1, 1);
@@ -105,7 +125,6 @@ export function useSession() {
         }
         proc.connect(muet);
 
-        // 3) WebSocket vers le backend
         const sr = Math.round(ctx.sampleRate);
         const ws = new WebSocket(`${BACKEND_WS}/audio?sr=${sr}`);
         ws.binaryType = "arraybuffer";
@@ -123,16 +142,32 @@ export function useSession() {
           } catch (_) {
             return;
           }
-          if (msg.type === "transcript" && msg.texte) {
-            if (msg.final) {
-              finalRef.current = (finalRef.current + " " + msg.texte).replace(/\s+/g, " ").trim();
-              setTranscription(finalRef.current);
-              setPartiel("");
-            } else {
-              setPartiel(msg.texte);
-            }
-          } else if (msg.type === "erreur") {
-            setErreur(msg.message || "Erreur de transcription.");
+          switch (msg.type) {
+            case "transcript":
+              if (!msg.texte) break;
+              if (msg.final) {
+                finalRef.current = (finalRef.current + " " + msg.texte).replace(/\s+/g, " ").trim();
+                setTranscription(finalRef.current);
+                setPartiel("");
+              } else {
+                setPartiel(msg.texte);
+              }
+              break;
+            case "suggestion":
+              if (msg.suggestion) {
+                setFiche(msg.suggestion);
+                setSujet(msg.sujet || "");
+              }
+              break;
+            case "analyse":
+              setAnalyseActive(!!msg.actif);
+              break;
+            case "silence":
+              // Mode silence : on garde la dernière fiche affichée, rien de neuf.
+              break;
+            case "erreur":
+              setErreur(msg.message || "Erreur.");
+              break;
           }
         };
 
@@ -141,7 +176,6 @@ export function useSession() {
           if (statutRef.current === "ecoute") arreter();
         };
 
-        // 4) Envoi du PCM (Int16) au fil de l'audio
         proc.onaudioprocess = (e) => {
           if (ws.readyState !== WebSocket.OPEN) return;
           const entree = e.inputBuffer.getChannelData(0);
@@ -153,7 +187,6 @@ export function useSession() {
           ws.send(pcm.buffer);
         };
 
-        // Arret du partage d'onglet -> on arrete la session proprement
         if (appel) {
           appel.getVideoTracks().forEach((t) => (t.onended = () => arreter()));
         }
@@ -167,8 +200,18 @@ export function useSession() {
     [arreter]
   );
 
-  // Nettoyage si le composant est demonte
   useEffect(() => () => arreter(), [arreter]);
 
-  return { statut, transcription, partiel, erreur, secondes, demarrer, arreter };
+  return {
+    statut,
+    transcription,
+    partiel,
+    erreur,
+    secondes,
+    fiche,
+    sujet,
+    analyseActive,
+    demarrer,
+    arreter,
+  };
 }

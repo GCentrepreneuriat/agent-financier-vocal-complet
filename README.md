@@ -8,7 +8,7 @@ Application web temps réel qui assiste un conseiller en sécurité financière 
 ```
 
 > 🚧 **Construction par phases.** Voir la roadmap dans le cahier de charges.
-> **Phase actuelle : Phase 1 — MVP audio + transcription temps réel.**
+> **Phase actuelle : Phase 2 — suggestions temps réel (détection Haiku → fiche d'expert Sonnet, avec mode silence).**
 
 ---
 
@@ -36,11 +36,14 @@ Crée le fichier de clés du backend :
 cp backend/.env.example backend/.env
 ```
 
-Puis ouvre `backend/.env` et remplis au minimum :
+Puis ouvre `backend/.env` et remplis :
 
 ```
 DEEPGRAM_API_KEY=ta-cle-deepgram
+ANTHROPIC_API_KEY=ta-cle-anthropic
 ```
+
+*(Sans `ANTHROPIC_API_KEY`, la transcription fonctionne mais les suggestions sont désactivées.)*
 
 ## Lancer (développement)
 
@@ -55,12 +58,21 @@ npm run dev
 
 ---
 
-## Utilisation (Phase 1)
+## Utilisation (Phase 2)
 
 1. Ouvre **http://localhost:5173**
 2. Clique **« Démarrer la session »** et autorise le microphone
-3. La transcription s'affiche en temps réel
-4. En visio : coche **« Capter aussi l'audio de l'appel »** pour partager l'onglet de l'appel et capter les deux interlocuteurs
+3. La transcription s'affiche en temps réel (colonne de gauche)
+4. Quand un élément utile est détecté (objection, question, opportunité…), une **fiche d'expert** apparaît à droite : points clés, question à poser, piège à éviter
+5. **Mode silence** : tant que rien d'utile ne se dit, aucune suggestion n'est poussée
+6. En visio : coche **« Capter aussi l'audio de l'appel »** pour capter les deux interlocuteurs
+
+### Comment ça marche (pipeline)
+
+```
+Audio → Deepgram (transcription) → Détection (Claude Haiku, rapide/économe)
+      → si pertinent → Orchestrateur (Claude Sonnet) → Fiche d'expert à l'écran
+```
 
 ---
 
