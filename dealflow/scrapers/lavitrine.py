@@ -143,6 +143,11 @@ class LaVitrineScraper(BaseScraper):
         content = _normalize_content(item.get("content", {}).get("rendered", ""))
         pricing = _parse_pricing(content)
         full_desc = _full_description(content)
+
+        # Détection des annonces VENDUES : tampon "*** entreprise vendue, merci ***".
+        # On exige "merci" juste après "vendue" pour éviter les faux positifs
+        # ("produits vendus en épiceries", "vendue avec tous les outils", etc.).
+        is_sold = bool(re.search(r"vendue?\s*,?\s*!?\s*merci", content, re.IGNORECASE))
         # Repli sur le résumé court si le contenu n'a pas de texte.
         description = full_desc or meta.get("_company_tagline") or ""
 
@@ -170,4 +175,5 @@ class LaVitrineScraper(BaseScraper):
             revenue=_money_to_int(revenue_text),
             ebitda=_money_to_int(ebitda_text),
             date_listed=(item.get("date") or "")[:10] or None,
+            status="vendu" if is_sold else "active",
         )

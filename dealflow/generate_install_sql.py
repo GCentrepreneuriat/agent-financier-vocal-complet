@@ -90,8 +90,22 @@ def main():
     listings = LaVitrineScraper().run()
     reviewed = find_duplicates(listings)
 
+    # On ne publie que les annonces actives (on exclut les vendues/retirées).
+    active = [r for r in reviewed if r.listing.status == "active"]
+    sold = len(reviewed) - len(active)
+
     out = [DDL]
-    for r in reviewed:
+
+    # Nettoyage : retirer de la base les annonces lavitrine qui ne sont plus
+    # actives (vendues ou disparues), pour que la table reste à jour à chaque run.
+    active_ids = ", ".join(q(r.listing.source_id) for r in active)
+    out.append(
+        "delete from public.listings_publics where source = 'lavitrine'"
+        + (f" and source_id not in ({active_ids});" if active_ids else ";")
+    )
+    out.append("")
+
+    for r in active:
         l = r.listing
         pdup = " | ".join(r.potential_duplicate_of)
         vals = [
@@ -115,7 +129,8 @@ def main():
     path = "data/installation_lovable_cloud.sql"
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(out) + "\n")
-    print(f"OK — {len(reviewed)} entreprises écrites dans {path}")
+    print(f"OK — {len(active)} entreprises actives écrites dans {path} "
+          f"({sold} vendues exclues)")
 
 
 if __name__ == "__main__":
