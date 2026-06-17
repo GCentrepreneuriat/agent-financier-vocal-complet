@@ -1,5 +1,12 @@
-"""Génère un fichier SQL complet (création table + RLS + INSERT des annonces)
-prêt à coller dans Lovable Cloud > SQL editor."""
+"""Génère un fichier SQL (création table + RLS + INSERT des annonces) prêt à
+coller dans Lovable Cloud > SQL editor.
+
+  python generate_install_sql.py                       # complet (2 sources, nettoyage)
+  python generate_install_sql.py --append              # ajout seulement, aucun DELETE
+  python generate_install_sql.py --source monentrepriseavendre --append
+"""
+
+import argparse
 
 from scrapers.lavitrine import LaVitrineScraper
 from scrapers.monentrepriseavendre import MonEntrepriseAVendreScraper
@@ -90,10 +97,23 @@ def n(v):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Génère le SQL d'installation/mise à jour")
+    parser.add_argument(
+        "--append", action="store_true",
+        help="Mode ajout seulement : aucune suppression (ne retire pas les vendues).",
+    )
+    parser.add_argument(
+        "--source", action="append", choices=[s.source_name for s in SCRAPERS],
+        help="Limiter à une ou plusieurs sources (répétable). Défaut : toutes.",
+    )
+    parser.add_argument("--out", default="data/installation_lovable_cloud.sql")
+    args = parser.parse_args()
+
+    chosen = [s for s in SCRAPERS if not args.source or s.source_name in args.source]
+
     listings = []
-    for scraper_cls in SCRAPERS:
-        name = scraper_cls.source_name
-        print(f"→ Scraping {name}…")
+    for scraper_cls in chosen:
+        print(f"→ Scraping {scraper_cls.source_name}…")
         got = scraper_cls().run()
         print(f"  {len(got)} annonces")
         listings.extend(got)
@@ -106,16 +126,17 @@ def main():
 
     out = [DDL]
 
-    # Nettoyage par source : retirer de la base les annonces qui ne sont plus
-    # actives (vendues/disparues), pour que la table reste à jour à chaque run.
-    sources = {r.listing.source for r in active}
-    for src in sorted(sources):
-        ids = ", ".join(q(r.listing.source_id) for r in active if r.listing.source == src)
-        out.append(
-            f"delete from public.listings_publics where source = {q(src)}"
-            + (f" and source_id not in ({ids});" if ids else ";")
-        )
-    out.append("")
+    if not args.append:
+        # Nettoyage par source : retirer de la base les annonces qui ne sont plus
+        # actives (vendues/disparues), pour garder la table à jour à chaque run.
+        sources = {r.listing.source for r in active}
+        for src in sorted(sources):
+            ids = ", ".join(q(r.listing.source_id) for r in active if r.listing.source == src)
+            out.append(
+                f"delete from public.listings_publics where source = {q(src)}"
+                + (f" and source_id not in ({ids});" if ids else ";")
+            )
+        out.append("")
 
     for r in active:
         l = r.listing
@@ -138,10 +159,10 @@ def main():
             "last_seen = excluded.last_seen, status = excluded.status;"
         )
 
-    path = "data/installation_lovable_cloud.sql"
-    with open(path, "w", encoding="utf-8") as f:
+    with open(args.out, "w", encoding="utf-8") as f:
         f.write("\n".join(out) + "\n")
-    print(f"OK — {len(active)} entreprises actives écrites dans {path} "
+    mode = "AJOUT seulement (aucun DELETE)" if args.append else "complet (avec nettoyage)"
+    print(f"OK [{mode}] — {len(active)} entreprises écrites dans {args.out} "
           f"({sold} vendues exclues)")
 
 
