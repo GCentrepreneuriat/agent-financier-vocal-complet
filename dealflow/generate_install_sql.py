@@ -2,7 +2,10 @@
 prêt à coller dans Lovable Cloud > SQL editor."""
 
 from scrapers.lavitrine import LaVitrineScraper
+from scrapers.monentrepriseavendre import MonEntrepriseAVendreScraper
 from dedupe import find_duplicates
+
+SCRAPERS = [LaVitrineScraper, MonEntrepriseAVendreScraper]
 
 DDL = """-- ============================================================
 --  GC DEAL FLOW — Installation complete (Lovable Cloud)
@@ -87,7 +90,14 @@ def n(v):
 
 
 def main():
-    listings = LaVitrineScraper().run()
+    listings = []
+    for scraper_cls in SCRAPERS:
+        name = scraper_cls.source_name
+        print(f"→ Scraping {name}…")
+        got = scraper_cls().run()
+        print(f"  {len(got)} annonces")
+        listings.extend(got)
+
     reviewed = find_duplicates(listings)
 
     # On ne publie que les annonces actives (on exclut les vendues/retirées).
@@ -96,13 +106,15 @@ def main():
 
     out = [DDL]
 
-    # Nettoyage : retirer de la base les annonces lavitrine qui ne sont plus
-    # actives (vendues ou disparues), pour que la table reste à jour à chaque run.
-    active_ids = ", ".join(q(r.listing.source_id) for r in active)
-    out.append(
-        "delete from public.listings_publics where source = 'lavitrine'"
-        + (f" and source_id not in ({active_ids});" if active_ids else ";")
-    )
+    # Nettoyage par source : retirer de la base les annonces qui ne sont plus
+    # actives (vendues/disparues), pour que la table reste à jour à chaque run.
+    sources = {r.listing.source for r in active}
+    for src in sorted(sources):
+        ids = ", ".join(q(r.listing.source_id) for r in active if r.listing.source == src)
+        out.append(
+            f"delete from public.listings_publics where source = {q(src)}"
+            + (f" and source_id not in ({ids});" if ids else ";")
+        )
     out.append("")
 
     for r in active:

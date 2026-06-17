@@ -69,6 +69,35 @@ _SECTOR_MAP = {
     "restauration": "restauration",
     "restaurant": "restauration",
     "alimentation": "restauration",
+    "cafe": "restauration",
+    "bar": "restauration",
+    "bistro": "restauration",
+    "boulangerie": "restauration",
+    "patisserie": "restauration",
+    "traiteur": "restauration",
+    "epicerie": "commerce-detail",
+    "depanneur": "commerce-detail",
+    "boutique": "commerce-detail",
+    "bijouterie": "commerce-detail",
+    "magasin": "commerce-detail",
+    "vetements": "commerce-detail",
+    "chaussures": "commerce-detail",
+    "franchise": "commerce-detail",
+    "garage": "automobile",
+    "mecanique": "automobile",
+    "carrosserie": "automobile",
+    "agence web": "technologie",
+    "commerce en ligne": "technologie",
+    "informatique": "technologie",
+    "esthetique": "services-professionnels",
+    "beaute": "services-professionnels",
+    "salon": "services-professionnels",
+    "coiffure": "services-professionnels",
+    "hebergement": "services-professionnels",
+    "pourvoirie": "services-professionnels",
+    "camping": "services-professionnels",
+    "residence": "sante",
+    "clinique": "sante",
     "technologie": "technologie",
     "techno": "technologie",
     "ti": "technologie",
@@ -124,10 +153,12 @@ def normalize_sector(raw: str) -> str:
         return ""
     if k in _SECTOR_MAP:
         return _SECTOR_MAP[k]
-    # correspondance partielle (le brut contient un mot-clé connu)
-    for needle, canonical in _SECTOR_MAP.items():
+    # correspondance partielle : on teste les mots-clés du plus long au plus
+    # court pour que le terme le plus spécifique l'emporte (ex: 'epicerie'
+    # plutôt que 'service' dans "épicerie avec station service").
+    for needle in sorted(_SECTOR_MAP, key=len, reverse=True):
         if needle in k:
-            return canonical
+            return _SECTOR_MAP[needle]
     return "autre"
 
 
