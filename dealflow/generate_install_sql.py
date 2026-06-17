@@ -10,9 +10,10 @@ import argparse
 
 from scrapers.lavitrine import LaVitrineScraper
 from scrapers.monentrepriseavendre import MonEntrepriseAVendreScraper
+from scrapers.entreprisesavendre import EntreprisesAVendreScraper
 from dedupe import find_duplicates
 
-SCRAPERS = [LaVitrineScraper, MonEntrepriseAVendreScraper]
+SCRAPERS = [LaVitrineScraper, MonEntrepriseAVendreScraper, EntreprisesAVendreScraper]
 
 DDL = """-- ============================================================
 --  GC DEAL FLOW — Installation complete (Lovable Cloud)

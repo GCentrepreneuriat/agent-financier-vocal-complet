@@ -11,6 +11,7 @@ avec les libellés bruts de cette source.
 
 from __future__ import annotations
 
+import re
 import unicodedata
 
 
@@ -82,7 +83,6 @@ _SECTOR_MAP = {
     "magasin": "commerce-detail",
     "vetements": "commerce-detail",
     "chaussures": "commerce-detail",
-    "franchise": "commerce-detail",
     "garage": "automobile",
     "mecanique": "automobile",
     "carrosserie": "automobile",
@@ -96,6 +96,16 @@ _SECTOR_MAP = {
     "hebergement": "services-professionnels",
     "pourvoirie": "services-professionnels",
     "camping": "services-professionnels",
+    "motel": "services-professionnels",
+    "hotel": "services-professionnels",
+    "auberge": "services-professionnels",
+    "gite": "services-professionnels",
+    "garderie": "services-professionnels",
+    "cremerie": "restauration",
+    "creme glacee": "restauration",
+    "microbrasserie": "restauration",
+    "pizzeria": "restauration",
+    "sushi": "restauration",
     "residence": "sante",
     "clinique": "sante",
     "technologie": "technologie",
@@ -153,11 +163,11 @@ def normalize_sector(raw: str) -> str:
         return ""
     if k in _SECTOR_MAP:
         return _SECTOR_MAP[k]
-    # correspondance partielle : on teste les mots-clés du plus long au plus
-    # court pour que le terme le plus spécifique l'emporte (ex: 'epicerie'
-    # plutôt que 'service' dans "épicerie avec station service").
+    # correspondance partielle PAR MOT ENTIER (et non sous-chaîne, pour éviter
+    # que 'ti' matche 'Laurentides'). Du plus long au plus court pour que le
+    # terme le plus spécifique l'emporte ('epicerie' avant 'service').
     for needle in sorted(_SECTOR_MAP, key=len, reverse=True):
-        if needle in k:
+        if re.search(r"\b" + re.escape(needle) + r"\b", k):
             return _SECTOR_MAP[needle]
     return "autre"
 
