@@ -47,7 +47,8 @@ class Listing:
     city: str = ""
 
     # --- Données financières (souvent partielles / cachées derrière login) ---
-    asking_price: Optional[int] = None   # prix demandé en $CAD
+    asking_price: Optional[int] = None   # prix demandé en $CAD (numérique si dispo)
+    asking_price_text: str = ""          # prix tel qu'affiché ("660 000 $", "À discuter")
     revenue: Optional[int] = None        # chiffre d'affaires
     ebitda: Optional[int] = None         # BAIIA
 
