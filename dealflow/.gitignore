@@ -1,0 +1,10 @@
+# Données scrapées (régénérables — ne pas versionner du contenu tiers)
+data/
+*.csv
+*.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
