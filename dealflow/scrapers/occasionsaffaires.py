@@ -25,7 +25,7 @@ from models import Listing
 from normalize import normalize_region, normalize_sector
 from scrapers.base import BaseScraper
 
-LIST_URL = "https://occasionsaffaires.ca/annonces/entreprises-a-vendre"
+BASE = "https://occasionsaffaires.ca/annonces"
 
 _CARD_TITLE = re.compile(
     r'pflist-itemtitle"[^>]*>\s*<a[^>]*href="([^"]*?/annonce/[^"]+/)"[^>]*>(.*?)</a>',
@@ -50,6 +50,8 @@ def _meta(h: str, prop: str) -> str:
 
 class OccasionsAffairesScraper(BaseScraper):
     source_name = "occasionsaffaires"
+    collection = "entreprises-a-vendre"   # section du site
+    listing_type = "entreprise"           # type d'annonce produit
 
     def fetch_listings(self) -> Iterator[Listing]:
         for card in self._collect_cards():
@@ -59,9 +61,10 @@ class OccasionsAffairesScraper(BaseScraper):
 
     def _collect_cards(self) -> list[dict]:
         """Parcourt les pages et extrait (url, titre, région, ville) par carte."""
+        list_url = f"{BASE}/{self.collection}"
         cards: dict[str, dict] = {}   # clé = url (dédupe les annonces "vedettes")
-        first = self.get(LIST_URL + "/").text
-        pages = {int(x) for x in re.findall(r"/entreprises-a-vendre/page/(\d+)/", first)}
+        first = self.get(list_url + "/").text
+        pages = {int(x) for x in re.findall(self.collection + r"/page/(\d+)/", first)}
         max_page = max(pages) if pages else 1
 
         def parse(h: str) -> None:
@@ -80,7 +83,7 @@ class OccasionsAffairesScraper(BaseScraper):
 
         parse(first)
         for p in range(2, max_page + 1):
-            parse(self.get(f"{LIST_URL}/page/{p}/").text)
+            parse(self.get(f"{list_url}/page/{p}/").text)
         return list(cards.values())
 
     def _parse_fiche(self, card: dict) -> Optional[Listing]:
@@ -100,8 +103,9 @@ class OccasionsAffairesScraper(BaseScraper):
             source_url=card["url"],
             title=card["title"],
             description=description,
+            listing_type=self.listing_type,
             sector_raw="",
-            sector=normalize_sector(card["title"]),
+            sector=normalize_sector(card["title"]) if self.listing_type == "entreprise" else "immobilier",
             region_raw=region_raw,
             region=normalize_region(region_raw),
             city=card["city"],
@@ -111,3 +115,10 @@ class OccasionsAffairesScraper(BaseScraper):
             ebitda=None,
             status="active",
         )
+
+
+class OccasionsAffairesImmoScraper(OccasionsAffairesScraper):
+    """Section immobilier commercial (bâtisses, locaux, terrains commerciaux)."""
+    source_name = "occasionsaffaires-immo"
+    collection = "opportunites-immobilieres"
+    listing_type = "immobilier"

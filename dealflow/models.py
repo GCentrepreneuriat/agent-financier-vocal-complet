@@ -38,6 +38,8 @@ class Listing:
     # --- Contenu ---
     title: str
     description: str = ""
+    # Type d'annonce : "entreprise" (par défaut) ou "immobilier" (bâtisse/local commercial)
+    listing_type: str = "entreprise"
 
     # --- Classification (valeurs brutes + normalisées) ---
     sector_raw: str = ""                 # ce que la source affiche

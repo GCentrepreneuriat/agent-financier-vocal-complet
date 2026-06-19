@@ -11,7 +11,7 @@ import argparse
 from scrapers.lavitrine import LaVitrineScraper
 from scrapers.monentrepriseavendre import MonEntrepriseAVendreScraper
 from scrapers.entreprisesavendre import EntreprisesAVendreScraper
-from scrapers.occasionsaffaires import OccasionsAffairesScraper
+from scrapers.occasionsaffaires import OccasionsAffairesScraper, OccasionsAffairesImmoScraper
 from scrapers.trnsfr import TrnsfrScraper
 from scrapers.sunbelt import SunbeltScraper
 from scrapers.businessesforsale import BusinessesForSaleScraper
@@ -22,7 +22,7 @@ SCRAPERS = [
     LaVitrineScraper, MonEntrepriseAVendreScraper,
     EntreprisesAVendreScraper, OccasionsAffairesScraper,
     TrnsfrScraper, SunbeltScraper, BusinessesForSaleScraper,
-    AcquizitionScraper,
+    AcquizitionScraper, OccasionsAffairesImmoScraper,
 ]
 
 DDL = """-- ============================================================
@@ -37,6 +37,7 @@ create table if not exists public.listings_publics (
     source_url      text not null,
     title           text not null,
     description     text,
+    listing_type    text default 'entreprise',
     sector_raw      text,
     sector          text,
     region_raw      text,
@@ -56,8 +57,9 @@ create table if not exists public.listings_publics (
     unique (source, source_id)
 );
 
--- Si la table existait deja sans cette colonne, on l'ajoute.
+-- Si la table existait deja sans ces colonnes, on les ajoute.
 alter table public.listings_publics add column if not exists asking_price_text text;
+alter table public.listings_publics add column if not exists listing_type text default 'entreprise';
 
 alter table public.listings_publics enable row level security;
 
@@ -92,7 +94,7 @@ create policy "contacts_select" on public.contacts
 -- Insertion des annonces (re-executable: met a jour les fiches existantes)
 """
 
-COLS = ("source, source_id, source_url, title, description, sector_raw, sector, "
+COLS = ("source, source_id, source_url, title, description, listing_type, sector_raw, sector, "
         "region_raw, region, city, asking_price, asking_price_text, revenue, ebitda, "
         "date_listed, last_seen, status, dedup_hash, potential_duplicate_of")
 
@@ -154,7 +156,7 @@ def main():
         pdup = " | ".join(r.potential_duplicate_of)
         vals = [
             q(l.source), q(l.source_id), q(l.source_url), q(l.title), q(l.description),
-            q(l.sector_raw), q(l.sector), q(l.region_raw), q(l.region), q(l.city),
+            q(l.listing_type), q(l.sector_raw), q(l.sector), q(l.region_raw), q(l.region), q(l.city),
             n(l.asking_price), q(l.asking_price_text), n(l.revenue), n(l.ebitda),
             q(l.date_listed), q(l.last_seen),
             q(l.status), q(l.dedup_hash), q(pdup),
