@@ -14,12 +14,13 @@ from scrapers.entreprisesavendre import EntreprisesAVendreScraper
 from scrapers.occasionsaffaires import OccasionsAffairesScraper
 from scrapers.trnsfr import TrnsfrScraper
 from scrapers.sunbelt import SunbeltScraper
+from scrapers.businessesforsale import BusinessesForSaleScraper
 from dedupe import find_duplicates
 
 SCRAPERS = [
     LaVitrineScraper, MonEntrepriseAVendreScraper,
     EntreprisesAVendreScraper, OccasionsAffairesScraper,
-    TrnsfrScraper, SunbeltScraper,
+    TrnsfrScraper, SunbeltScraper, BusinessesForSaleScraper,
 ]
 
 DDL = """-- ============================================================
