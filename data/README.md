@@ -6,6 +6,15 @@ Rendements **datés au 30 juin 2025** (à rafraîchir plus tard depuis ia.ca/ren
 ## Fichiers
 - `fonds_ia.json` — 68 fonds, données complètes (description, style, rendements composés + annuels, composition d'actif quand disponible).
 - `fonds_ia.csv` — vue tabulaire résumée (pour Excel / import rapide).
+- `questionnaire_profil.json` — les 8 questions officielles iA + barème de pointage.
+- `profils_allocations.json` — allocations Revenu/Actions par profil.
+- `supabase_import.sql` — **script prêt à importer dans Supabase** (crée les tables `fonds` et `profils_allocation`, insère les 68 fonds et les 5 profils, avec RLS lecture pour utilisateurs authentifiés).
+
+## Import dans Supabase
+1. Ouvre ton projet Supabase → **SQL Editor** → **New query**.
+2. Copie-colle tout le contenu de `supabase_import.sql`.
+3. Clique **Run**. Les tables `fonds` et `profils_allocation` sont créées et remplies.
+4. Le script est ré-exécutable sans risque (`on conflict ... do nothing`).
 
 ## Champs (JSON)
 | Champ | Description |
