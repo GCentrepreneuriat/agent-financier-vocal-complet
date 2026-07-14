@@ -28,18 +28,17 @@ Ajoute maintenant l'**espace client sécurisé** (zone membre) à la plateforme 
 - Rappel : si le profil n'est pas complété, le portefeuille sur mesure n'est pas encore disponible.
 
 **2. Mon profil d'investisseur**
-- Questionnaire de tolérance au risque (8 à 10 questions à choix multiples) :
-  - Horizon de placement (moins de 3 ans → plus de 15 ans)
-  - Réaction à une baisse de 20 % de la valeur du portefeuille
-  - Objectif principal (préserver le capital / revenu / croissance)
-  - Connaissance des placements
-  - Stabilité et source des revenus
-  - Capacité à épargner / à absorber une perte
-- Chaque réponse donne un score. Le total classe le client dans un profil :
-  **Prudent / Conservateur / Modéré / Croissance / Audacieux**.
+- Reproduis EXACTEMENT le questionnaire officiel iA (fourni dans `data/questionnaire_profil.json`) : **8 questions**, réparties en 4 sections (Horizon d'investissement, Situation financière, Tolérance au risque, Connaissance des placements). Chaque réponse vaut **1, 2, 5, 10 ou 20 points**.
+- Additionne les points. Le total (de 8 à 160) détermine le profil selon ces seuils EXACTS :
+  - **8 à 26 → Prudent**
+  - **27 à 55 → Modéré**
+  - **56 à 89 → Équilibré**
+  - **90 à 119 → Croissance**
+  - **120 à 160 → Audacieux**
+- Affiche à la fin le profil obtenu, le pointage total, et la description du profil (fournie dans `data/profils_allocations.json`).
 - Le client peut refaire le questionnaire pour mettre à jour son profil.
-- Sauvegarder le profil, le score et les réponses dans Supabase.
-- Afficher le profil obtenu avec une description claire de ce qu'il signifie.
+- Sauvegarder le profil, le pointage et les réponses dans Supabase.
+- Utilise le contenu des fichiers de données fournis plutôt que d'inventer des questions.
 
 **3. Fonds de placement**
 - Liste des fonds offerts par la firme (fictifs pour l'instant) avec, pour chaque fonds :
@@ -53,8 +52,15 @@ Ajoute maintenant l'**espace client sécurisé** (zone membre) à la plateforme 
 **4. Mon portefeuille sur mesure**
 - Accessible SEULEMENT si le profil d'investisseur est complété (sinon, message invitant à le compléter d'abord).
 - Un **portefeuille personnalisé généré par l'IA** selon : le profil de l'investisseur, le contexte de marché actuel et les données économiques.
-- Utilise une **fonction d'IA** (intégration OpenAI/Claude via Lovable) qui reçoit en entrée : le profil du client, la liste des fonds disponibles et un résumé du contexte de marché, et qui retourne :
-  - Une **allocation** (% par fonds, total 100 %).
+- **Contrainte obligatoire — respecter la répartition Revenu/Actions officielle du profil** (fournie dans `data/profils_allocations.json`). L'IA doit rester dans la fourchette du profil :
+  - Prudent : Revenu 65-100 % / Actions 0-35 % (cible 75/25)
+  - Modéré : Revenu 50-70 % / Actions 30-50 % (cible 60/40)
+  - Équilibré : Revenu 35-55 % / Actions 45-65 % (cible 55/45)
+  - Croissance : Revenu 20-40 % / Actions 60-80 % (cible 30/70)
+  - Audacieux : Revenu 0-25 % / Actions 75-100 % (cible 15/85)
+- L'IA choisit UNIQUEMENT parmi les fonds réels de la firme (fournis dans `data/fonds_ia.json`), jamais de fonds inventés.
+- La **fonction d'IA** (intégration Claude via Lovable) reçoit : le profil + pointage du client, la liste des fonds disponibles (avec catégorie et rendements), et un résumé du contexte de marché ; elle retourne :
+  - Une **allocation** (% par fonds, total 100 %) respectant la fourchette Revenu/Actions du profil.
   - Une **explication globale du portefeuille** (stratégie, pourquoi elle convient au profil et au marché actuel).
   - Une **explication par fonds choisi** (rôle dans le portefeuille, raison du choix, niveau de risque).
 - Afficher l'allocation en **graphique en donut** + tableau des fonds pondérés.

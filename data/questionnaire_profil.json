@@ -1,0 +1,126 @@
+{
+  "titre": "Votre profil d'investisseur",
+  "source": "iA Groupe financier — formulaire F51-122 (23-11)",
+  "bareme_points": [1, 2, 5, 10, 20],
+  "sections": [
+    {
+      "section": "Horizon d'investissement",
+      "questions": [
+        {
+          "id": 1,
+          "question": "Quel âge avez-vous?",
+          "reponses": [
+            { "texte": "Plus de 71 ans", "points": 1 },
+            { "texte": "Entre 65 et 70 ans", "points": 2 },
+            { "texte": "Entre 55 et 64 ans", "points": 5 },
+            { "texte": "Entre 41 et 54 ans", "points": 10 },
+            { "texte": "Entre 18 et 40 ans", "points": 20 }
+          ]
+        },
+        {
+          "id": 2,
+          "question": "Quand prévoyez-vous commencer à faire des sorties de fonds d'au moins 25 % de votre épargne?",
+          "reponses": [
+            { "texte": "Dans moins de 1 an", "points": 1 },
+            { "texte": "Entre 1 et 3 ans", "points": 2 },
+            { "texte": "Entre 4 et 5 ans", "points": 5 },
+            { "texte": "Entre 6 et 9 ans", "points": 10 },
+            { "texte": "Dans plus de 10 ans", "points": 20 }
+          ]
+        },
+        {
+          "id": 3,
+          "question": "Au cours des 5 prochaines années, prévoyez-vous :",
+          "reponses": [
+            { "texte": "Faire des retraits de votre capital sur une base régulière (RAP, retraite, etc.)?", "points": 1 },
+            { "texte": "Retirer la totalité de votre rendement et une partie de votre capital?", "points": 2 },
+            { "texte": "Retirer tout votre rendement sans toucher à votre capital?", "points": 5 },
+            { "texte": "Retirer une partie de votre rendement seulement?", "points": 10 },
+            { "texte": "Accumuler des épargnes avec votre rendement (aucun retrait)?", "points": 20 }
+          ]
+        }
+      ]
+    },
+    {
+      "section": "Situation financière",
+      "questions": [
+        {
+          "id": 4,
+          "question": "Quel est votre revenu annuel brut (avant impôts)?",
+          "reponses": [
+            { "texte": "25 000 $ et moins", "points": 1 },
+            { "texte": "25 001 $ à 35 000 $", "points": 2 },
+            { "texte": "35 001 $ à 50 000 $", "points": 5 },
+            { "texte": "50 001 $ à 100 000 $", "points": 10 },
+            { "texte": "100 001 $ et plus", "points": 20 }
+          ]
+        },
+        {
+          "id": 5,
+          "question": "Quelle est votre valeur nette (actif moins passif)?",
+          "reponses": [
+            { "texte": "25 000 $ et moins", "points": 1 },
+            { "texte": "25 001 $ à 50 000 $", "points": 2 },
+            { "texte": "50 001 $ à 100 000 $", "points": 5 },
+            { "texte": "100 001 $ à 200 000 $", "points": 10 },
+            { "texte": "200 001 $ et plus", "points": 20 }
+          ]
+        }
+      ]
+    },
+    {
+      "section": "Tolérance au risque",
+      "questions": [
+        {
+          "id": 6,
+          "question": "Indiquez votre niveau de tolérance au risque lorsque vous investissez votre argent.",
+          "reponses": [
+            { "texte": "Très faible — Je n'aime pas l'idée de risquer mon argent. Mon seul objectif est de conserver les sommes que j'ai investies en toute sécurité.", "points": 1 },
+            { "texte": "Faible — Je suis prêt à tolérer une baisse occasionnelle de 5 % maximum, sachant qu'à long terme le rendement sera plus élevé.", "points": 2 },
+            { "texte": "Modéré — Je suis prêt à tolérer une baisse à court terme de 5 % à 10 % pour un rendement à long terme plus élevé.", "points": 5 },
+            { "texte": "Élevé — Je suis à l'aise avec une baisse à court terme de 10 % à 20 %, sachant qu'à long terme je rattraperai cette baisse.", "points": 10 },
+            { "texte": "Très élevé — Une baisse à court terme (moins d'un an) de 20 % de la valeur de mes placements ne m'inquiète pas.", "points": 20 }
+          ]
+        },
+        {
+          "id": 7,
+          "question": "Vous avez la possibilité de faire un placement de 10 000 $ pendant un an. Après un an, dans quelle fourchette accepteriez-vous que la valeur finale se situe?",
+          "reponses": [
+            { "texte": "Gains uniquement : entre 10 000 $ et 10 300 $", "points": 1 },
+            { "texte": "Entre 9 500 $ et 11 000 $", "points": 2 },
+            { "texte": "Entre 9 000 $ et 11 500 $", "points": 5 },
+            { "texte": "Entre 8 500 $ et 12 000 $", "points": 10 },
+            { "texte": "Entre 8 000 $ et 12 500 $", "points": 20 }
+          ]
+        }
+      ]
+    },
+    {
+      "section": "Connaissance des placements",
+      "questions": [
+        {
+          "id": 8,
+          "question": "Quel est votre niveau de connaissance des placements?",
+          "reponses": [
+            { "texte": "Très faible — Je commence à me familiariser avec les placements.", "points": 1 },
+            { "texte": "Faible — Je sais que certains placements sont plus risqués que d'autres.", "points": 2 },
+            { "texte": "Modéré — Je connais les différents types de placements et les risques qui s'y rattachent.", "points": 5 },
+            { "texte": "Avancé — Je comprends les niveaux de risque et de rendement de chaque type de placement.", "points": 10 },
+            { "texte": "Très avancé — Je surveille assidûment les marchés et j'en ai une connaissance approfondie.", "points": 20 }
+          ]
+        }
+      ]
+    }
+  ],
+  "calcul_pointage": {
+    "min": 8,
+    "max": 160,
+    "profils": [
+      { "profil": "prudent", "min": 8, "max": 26 },
+      { "profil": "modéré", "min": 27, "max": 55 },
+      { "profil": "équilibré", "min": 56, "max": 89 },
+      { "profil": "croissance", "min": 90, "max": 119 },
+      { "profil": "audacieux", "min": 120, "max": 160 }
+    ]
+  }
+}

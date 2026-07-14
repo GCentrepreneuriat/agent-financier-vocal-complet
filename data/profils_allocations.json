@@ -1,0 +1,51 @@
+{
+  "source": "iA Groupe financier — formulaire F51-122 (Votre profil d'investisseur)",
+  "note": "Répartition Revenu (obligations, marché monétaire, fonds à intérêt garanti/quotidien) vs Actions (canadiennes, américaines, internationales, mondiales). Les fonds Focus et Indexia sont conçus pour respecter chaque profil avec rééquilibrage automatique.",
+  "profils": [
+    {
+      "profil": "prudent",
+      "pointage": "8 à 26",
+      "description": "Il est important pour vous d'assurer la sécurité de votre capital et votre tolérance à la volatilité est faible. Vous recherchez des placements offrant un revenu régulier et la préservation du capital.",
+      "cible": { "revenu": 75, "actions": 25 },
+      "fourchette": { "revenu": [65, 100], "actions": [0, 35] },
+      "fonds_focus": "Focus prudent (iA) — code 816",
+      "fonds_indexia": "Indexia prudent (iA) — code 913"
+    },
+    {
+      "profil": "modéré",
+      "pointage": "27 à 55",
+      "description": "Vous recherchez une certaine croissance de votre capital et votre tolérance à la volatilité est modérée. Vous privilégiez les placements dont les revenus sont relativement stables.",
+      "cible": { "revenu": 60, "actions": 40 },
+      "fourchette": { "revenu": [50, 70], "actions": [30, 50] },
+      "fonds_focus": "Focus modéré (iA) — code 817",
+      "fonds_indexia": "Indexia modéré (iA) — code 914"
+    },
+    {
+      "profil": "équilibré",
+      "pointage": "56 à 89",
+      "description": "Vous recherchez un équilibre entre le revenu et la croissance de votre capital. Votre tolérance au risque est moyenne. Vous misez sur une appréciation à moyen et long terme.",
+      "cible": { "revenu": 55, "actions": 45 },
+      "fourchette": { "revenu": [35, 55], "actions": [45, 65] },
+      "fonds_focus": "Focus équilibré (iA) — code 818",
+      "fonds_indexia": "Indexia équilibré (iA) — code 915"
+    },
+    {
+      "profil": "croissance",
+      "pointage": "90 à 119",
+      "description": "Vous recherchez une croissance supérieure à la moyenne et êtes prêt à tolérer un risque élevé. Investisseur patient, vous ne vous laissez pas influencer par les fluctuations.",
+      "cible": { "revenu": 30, "actions": 70 },
+      "fourchette": { "revenu": [20, 40], "actions": [60, 80] },
+      "fonds_focus": "Focus croissance (iA) — code 819",
+      "fonds_indexia": "Indexia croissance (iA) — code 916"
+    },
+    {
+      "profil": "audacieux",
+      "pointage": "120 à 160",
+      "description": "Vous possédez une forte tolérance au risque et les fluctuations des marchés ne vous tracassent pas. Vous recherchez une croissance élevée et acceptez des variations substantielles d'une année à l'autre.",
+      "cible": { "revenu": 15, "actions": 85 },
+      "fourchette": { "revenu": [0, 25], "actions": [75, 100] },
+      "fonds_focus": "Focus audacieux (iA) — code 820",
+      "fonds_indexia": "Indexia audacieux (iA) — code 917"
+    }
+  ]
+}
