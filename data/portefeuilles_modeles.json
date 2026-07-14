@@ -1,0 +1,309 @@
+[
+  {
+    "profil": "prudent",
+    "titre": "Portefeuille Prudent",
+    "resume": "Sécurité du capital et revenu régulier, avec une petite part d'actions de qualité pour un léger potentiel de croissance.",
+    "cible_revenu": 75,
+    "cible_actions": 25,
+    "contexte_marche": "Au moment de ce rééquilibrage (juillet 2026), le taux directeur de la Banque du Canada est stable à 2,25 %, l'inflation de base tourne autour de 2 % (l'inflation globale, à ~3,2 %, est surtout tirée par le pétrole) et la croissance économique demeure modérée. Les tensions géopolitiques au Moyen-Orient et l'incertitude commerciale entretiennent la volatilité, tandis que les rendements obligataires sont légèrement plus élevés et que les marchés boursiers ont rebondi. Ce portefeuille privilégie donc des obligations de sociétés et de courte durée (moins sensibles aux taux), une bonne diversification mondiale et une exposition aux infrastructures comme protection contre l'inflation.",
+    "date_rebalancement": "2026-07-14",
+    "fonds": [
+      {
+        "code": "070",
+        "nom": "Marché monétaire (iA)",
+        "categorie": "Fonds de revenu",
+        "poids": 10,
+        "role": "Coussin de liquidités sécuritaire; profite du taux monétaire actuel (~2,4 %) sans risque de fluctuation."
+      },
+      {
+        "code": "170",
+        "nom": "Obligations court terme (iA)",
+        "categorie": "Fonds de revenu",
+        "poids": 20,
+        "role": "Obligations de courte durée, peu sensibles aux mouvements de taux — approprié dans le contexte de taux encore élevés."
+      },
+      {
+        "code": "762",
+        "nom": "Spécialisés Stratégie d'obligations de sociétés (iA)",
+        "categorie": "Fonds de revenu",
+        "poids": 25,
+        "role": "Obligations de sociétés de qualité : rendement supérieur aux obligations gouvernementales, durée plus courte."
+      },
+      {
+        "code": "605",
+        "nom": "Obligations mondiales multisectorielles (Loomis Sayles)",
+        "categorie": "Fonds de revenu",
+        "poids": 20,
+        "role": "Diversification obligataire mondiale et multisectorielle pour réduire la dépendance au marché canadien."
+      },
+      {
+        "code": "515",
+        "nom": "Dividendes croissance (iA)",
+        "categorie": "Fonds d'actions canadiennes",
+        "poids": 15,
+        "role": "Actions canadiennes de dividendes en croissance : revenu et stabilité, volatilité plus faible que le marché."
+      },
+      {
+        "code": "876",
+        "nom": "Indiciel mondial tous pays (BlackRock)",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 10,
+        "role": "Cœur d'actions mondiales indiciel, à faible coût, pour une diversification géographique large."
+      }
+    ]
+  },
+  {
+    "profil": "modéré",
+    "titre": "Portefeuille Modéré",
+    "resume": "Croissance modérée du capital avec une base obligataire dominante et des revenus relativement stables.",
+    "cible_revenu": 60,
+    "cible_actions": 40,
+    "contexte_marche": "Au moment de ce rééquilibrage (juillet 2026), le taux directeur de la Banque du Canada est stable à 2,25 %, l'inflation de base tourne autour de 2 % (l'inflation globale, à ~3,2 %, est surtout tirée par le pétrole) et la croissance économique demeure modérée. Les tensions géopolitiques au Moyen-Orient et l'incertitude commerciale entretiennent la volatilité, tandis que les rendements obligataires sont légèrement plus élevés et que les marchés boursiers ont rebondi. Ce portefeuille privilégie donc des obligations de sociétés et de courte durée (moins sensibles aux taux), une bonne diversification mondiale et une exposition aux infrastructures comme protection contre l'inflation.",
+    "date_rebalancement": "2026-07-14",
+    "fonds": [
+      {
+        "code": "170",
+        "nom": "Obligations court terme (iA)",
+        "categorie": "Fonds de revenu",
+        "poids": 15,
+        "role": "Obligations courtes, tampon défensif contre la volatilité des taux."
+      },
+      {
+        "code": "762",
+        "nom": "Spécialisés Stratégie d'obligations de sociétés (iA)",
+        "categorie": "Fonds de revenu",
+        "poids": 20,
+        "role": "Obligations de sociétés de qualité, moteur de revenu principal."
+      },
+      {
+        "code": "605",
+        "nom": "Obligations mondiales multisectorielles (Loomis Sayles)",
+        "categorie": "Fonds de revenu",
+        "poids": 15,
+        "role": "Obligations mondiales multisectorielles pour diversifier les sources de revenu."
+      },
+      {
+        "code": "893",
+        "nom": "Revenu fixe mondial (PIMCO)",
+        "categorie": "Fonds de revenu",
+        "poids": 10,
+        "role": "Revenu fixe mondial (PIMCO) : gestion active flexible dans un contexte de taux incertain."
+      },
+      {
+        "code": "515",
+        "nom": "Dividendes croissance (iA)",
+        "categorie": "Fonds d'actions canadiennes",
+        "poids": 12,
+        "role": "Actions canadiennes de dividendes : revenu et participation à la croissance avec moins de volatilité."
+      },
+      {
+        "code": "180",
+        "nom": "Indiciel américain (BlackRock)",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 13,
+        "role": "Indiciel américain, cœur d'actions du plus grand marché mondial, à faible coût."
+      },
+      {
+        "code": "876",
+        "nom": "Indiciel mondial tous pays (BlackRock)",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 15,
+        "role": "Actions mondiales indicielles pour une exposition diversifiée hors Canada."
+      }
+    ]
+  },
+  {
+    "profil": "équilibré",
+    "titre": "Portefeuille Équilibré",
+    "resume": "Équilibre entre revenu et croissance, diversifié mondialement, pour une appréciation à moyen et long terme.",
+    "cible_revenu": 55,
+    "cible_actions": 45,
+    "contexte_marche": "Au moment de ce rééquilibrage (juillet 2026), le taux directeur de la Banque du Canada est stable à 2,25 %, l'inflation de base tourne autour de 2 % (l'inflation globale, à ~3,2 %, est surtout tirée par le pétrole) et la croissance économique demeure modérée. Les tensions géopolitiques au Moyen-Orient et l'incertitude commerciale entretiennent la volatilité, tandis que les rendements obligataires sont légèrement plus élevés et que les marchés boursiers ont rebondi. Ce portefeuille privilégie donc des obligations de sociétés et de courte durée (moins sensibles aux taux), une bonne diversification mondiale et une exposition aux infrastructures comme protection contre l'inflation.",
+    "date_rebalancement": "2026-07-14",
+    "fonds": [
+      {
+        "code": "762",
+        "nom": "Spécialisés Stratégie d'obligations de sociétés (iA)",
+        "categorie": "Fonds de revenu",
+        "poids": 20,
+        "role": "Obligations de sociétés de qualité, base de revenu stable."
+      },
+      {
+        "code": "605",
+        "nom": "Obligations mondiales multisectorielles (Loomis Sayles)",
+        "categorie": "Fonds de revenu",
+        "poids": 20,
+        "role": "Obligations mondiales multisectorielles, diversification et gestion active de la durée."
+      },
+      {
+        "code": "893",
+        "nom": "Revenu fixe mondial (PIMCO)",
+        "categorie": "Fonds de revenu",
+        "poids": 15,
+        "role": "Revenu fixe mondial (PIMCO), flexibilité face aux taux."
+      },
+      {
+        "code": "010",
+        "nom": "Actions nord-américaines (iA)",
+        "categorie": "Fonds d'actions canadiennes",
+        "poids": 15,
+        "role": "Actions nord-américaines de grandes sociétés : cœur canadien et américain."
+      },
+      {
+        "code": "180",
+        "nom": "Indiciel américain (BlackRock)",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 12,
+        "role": "Indiciel américain, exposition au moteur de croissance mondial."
+      },
+      {
+        "code": "300",
+        "nom": "Indiciel international (BlackRock)",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 10,
+        "role": "Indiciel international (hors Amérique du Nord) pour diversifier les régions."
+      },
+      {
+        "code": "085",
+        "nom": "Infrastructures mondiales (Dynamique)",
+        "categorie": "Fonds spécialisés",
+        "poids": 8,
+        "role": "Infrastructures mondiales : actifs réels générant des revenus, protection contre l'inflation."
+      }
+    ]
+  },
+  {
+    "profil": "croissance",
+    "titre": "Portefeuille Croissance",
+    "resume": "Croissance supérieure à la moyenne, à dominante actions mondiales diversifiées, avec une base obligataire réduite.",
+    "cible_revenu": 30,
+    "cible_actions": 70,
+    "contexte_marche": "Au moment de ce rééquilibrage (juillet 2026), le taux directeur de la Banque du Canada est stable à 2,25 %, l'inflation de base tourne autour de 2 % (l'inflation globale, à ~3,2 %, est surtout tirée par le pétrole) et la croissance économique demeure modérée. Les tensions géopolitiques au Moyen-Orient et l'incertitude commerciale entretiennent la volatilité, tandis que les rendements obligataires sont légèrement plus élevés et que les marchés boursiers ont rebondi. Ce portefeuille privilégie donc des obligations de sociétés et de courte durée (moins sensibles aux taux), une bonne diversification mondiale et une exposition aux infrastructures comme protection contre l'inflation.",
+    "date_rebalancement": "2026-07-14",
+    "fonds": [
+      {
+        "code": "762",
+        "nom": "Spécialisés Stratégie d'obligations de sociétés (iA)",
+        "categorie": "Fonds de revenu",
+        "poids": 15,
+        "role": "Obligations de sociétés de qualité : stabilité et amortisseur de volatilité."
+      },
+      {
+        "code": "605",
+        "nom": "Obligations mondiales multisectorielles (Loomis Sayles)",
+        "categorie": "Fonds de revenu",
+        "poids": 15,
+        "role": "Obligations mondiales multisectorielles pour diversifier le volet défensif."
+      },
+      {
+        "code": "010",
+        "nom": "Actions nord-américaines (iA)",
+        "categorie": "Fonds d'actions canadiennes",
+        "poids": 15,
+        "role": "Actions nord-américaines, cœur du portefeuille d'actions."
+      },
+      {
+        "code": "180",
+        "nom": "Indiciel américain (BlackRock)",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 15,
+        "role": "Indiciel américain, exposition au principal marché de croissance."
+      },
+      {
+        "code": "707",
+        "nom": "Actions mondiales (iA)",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 15,
+        "role": "Actions mondiales gérées activement pour capter les occasions mondiales."
+      },
+      {
+        "code": "300",
+        "nom": "Indiciel international (BlackRock)",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 12,
+        "role": "Indiciel international pour élargir la diversification géographique."
+      },
+      {
+        "code": "085",
+        "nom": "Infrastructures mondiales (Dynamique)",
+        "categorie": "Fonds spécialisés",
+        "poids": 8,
+        "role": "Infrastructures mondiales : revenus et protection contre l'inflation."
+      },
+      {
+        "code": "921",
+        "nom": "Fidelity Actions mondiales - Concentré",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 5,
+        "role": "Actions mondiales concentrées (Fidelity) : convictions fortes, potentiel de surperformance."
+      }
+    ]
+  },
+  {
+    "profil": "audacieux",
+    "titre": "Portefeuille Audacieux",
+    "resume": "Croissance maximale du capital, presque entièrement en actions mondiales diversifiées, pour un horizon long et une forte tolérance au risque.",
+    "cible_revenu": 15,
+    "cible_actions": 85,
+    "contexte_marche": "Au moment de ce rééquilibrage (juillet 2026), le taux directeur de la Banque du Canada est stable à 2,25 %, l'inflation de base tourne autour de 2 % (l'inflation globale, à ~3,2 %, est surtout tirée par le pétrole) et la croissance économique demeure modérée. Les tensions géopolitiques au Moyen-Orient et l'incertitude commerciale entretiennent la volatilité, tandis que les rendements obligataires sont légèrement plus élevés et que les marchés boursiers ont rebondi. Ce portefeuille privilégie donc des obligations de sociétés et de courte durée (moins sensibles aux taux), une bonne diversification mondiale et une exposition aux infrastructures comme protection contre l'inflation.",
+    "date_rebalancement": "2026-07-14",
+    "fonds": [
+      {
+        "code": "605",
+        "nom": "Obligations mondiales multisectorielles (Loomis Sayles)",
+        "categorie": "Fonds de revenu",
+        "poids": 15,
+        "role": "Unique volet défensif : obligations mondiales pour amortir légèrement la volatilité."
+      },
+      {
+        "code": "180",
+        "nom": "Indiciel américain (BlackRock)",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 20,
+        "role": "Indiciel américain, plus forte pondération, moteur principal de croissance."
+      },
+      {
+        "code": "707",
+        "nom": "Actions mondiales (iA)",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 18,
+        "role": "Actions mondiales gérées activement, cœur diversifié du portefeuille."
+      },
+      {
+        "code": "876",
+        "nom": "Indiciel mondial tous pays (BlackRock)",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 15,
+        "role": "Actions mondiales indicielles tous pays, diversification à faible coût."
+      },
+      {
+        "code": "300",
+        "nom": "Indiciel international (BlackRock)",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 12,
+        "role": "Indiciel international pour l'exposition hors Amérique du Nord."
+      },
+      {
+        "code": "921",
+        "nom": "Fidelity Actions mondiales - Concentré",
+        "categorie": "Fonds d'actions américaines et internationales",
+        "poids": 10,
+        "role": "Actions mondiales concentrées (Fidelity) : convictions fortes."
+      },
+      {
+        "code": "085",
+        "nom": "Infrastructures mondiales (Dynamique)",
+        "categorie": "Fonds spécialisés",
+        "poids": 5,
+        "role": "Infrastructures mondiales : actifs réels, protection contre l'inflation."
+      },
+      {
+        "code": "084",
+        "nom": "Marchés émergents (Jarislowsky Fraser)",
+        "categorie": "Fonds spécialisés",
+        "poids": 5,
+        "role": "Marchés émergents : potentiel de croissance supplémentaire à long terme."
+      }
+    ]
+  }
+]
