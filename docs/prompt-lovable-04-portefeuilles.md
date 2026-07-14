@@ -2,7 +2,8 @@
 
 > À coller dans Lovable APRÈS le questionnaire de profil.
 > Les 5 portefeuilles sont FIXES (un par profil), stockés en base et modifiables par l'admin.
-> Prérequis : exécuter `supabase_import.sql` puis `supabase_portefeuilles.sql` dans Supabase.
+> Prérequis : exécuter `supabase_import.sql`, `supabase_portefeuilles.sql` puis
+> `supabase_portefeuilles_patch.sql` dans Supabase.
 > Design de référence : maquette « Mon portefeuille » (mêmes couleurs ci-dessous).
 
 ---
@@ -19,8 +20,8 @@ Reproduis le design décrit à la section DESIGN (présentation visuelle profess
   données. C'est l'administrateur qui le rééquilibre / le met à jour manuellement.
 
 ### Données déjà en base (Supabase) — utilise-les
-- `portefeuilles_modeles` : profil, titre, resume, cible_revenu, cible_actions, contexte_marche,
-  date_rebalancement.
+- `portefeuilles_modeles` : profil, titre, resume, cible_revenu, cible_actions, cible_rendement,
+  contexte_marche, date_rebalancement.
 - `lignes_portefeuille` : profil, code_fonds, poids (%), role (explication du fonds), ordre.
 - `fonds` : nom, categorie_produit, gestionnaire, rendements_composes (jsonb : 1an/3ans/5ans/10ans)…
   joignable par `code` = `code_fonds`.
@@ -41,7 +42,7 @@ Pour chaque portefeuille, calcule et affiche le rendement moyen pondéré sur 1,
 - Structure de la page (de haut en bas) :
   1. **En-tête (hero)** : petit sur-titre « Profil <nom> », grand titre du portefeuille (titre),
      résumé (resume), et 3 badges : Revenu (cible_revenu %), Actions (cible_actions %), Objectif de
-     rendement (voir table ci-dessous).
+     rendement (cible_rendement, ex. « 4 à 6 % »).
   2. **Rendement moyen du portefeuille** : 4 tuiles (1 an, 3 ans, 5 ans, 10 ans) affichant les
      moyennes calculées, en vert si positif / rouge si négatif, avec la mention « annualisé, moy.
      pondérée ».
@@ -55,8 +56,9 @@ Pour chaque portefeuille, calcule et affiche le rendement moyen pondéré sur 1,
   5. **Pourquoi ce portefeuille** : encadré affichant `contexte_marche` (l'analyse de conjoncture).
   6. **Pied** : date du dernier rééquilibrage (date_rebalancement) + avis légal (voir plus bas).
 
-Objectif de rendement par profil (à afficher dans le badge « Objectif ») :
-Prudent 3-4 % · Modéré 4-6 % · Équilibré 5-6 % · Croissance 6-8 % · Audacieux 8-10 %.
+L'objectif de rendement du badge provient de la colonne `cible_rendement` de la table
+`portefeuilles_modeles` (valeurs déjà en base : Prudent 3 à 4 % · Modéré 4 à 6 % · Équilibré 5 à 6 % ·
+Croissance 6 à 8 % · Audacieux 8 à 10 %).
 
 ### DESIGN (à reproduire fidèlement — mêmes couleurs que la maquette)
 **Palette (mode clair)**
@@ -92,8 +94,9 @@ Prudent 3-4 % · Modéré 4-6 % · Équilibré 5-6 % · Croissance 6-8 % · Auda
 ### Section admin — « Gérer les portefeuilles » (réservée à l'administrateur)
 Réserve cette section à un utilisateur admin (rôle `admin` dans la table profiles, ou liste d'emails
 autorisés). Elle permet de rééquilibrer sans code :
-- Choisir un profil, puis modifier : titre, résumé, contexte de marché, répartition cible, date de
-  rééquilibrage ; ajouter/retirer des fonds (choisis dans `fonds`), ajuster poids % et rôle.
+- Choisir un profil, puis modifier : titre, résumé, contexte de marché, répartition cible, objectif de
+  rendement (cible_rendement), date de rééquilibrage ; ajouter/retirer des fonds (choisis dans `fonds`),
+  ajuster poids % et rôle.
 - VALIDATION : la somme des poids doit égaler 100 % (afficher le total en direct, bloquer sinon).
 - Avertissement (non bloquant) si la répartition Revenu/Actions sort de la fourchette du profil
   (`profils_allocation` : fourchette_revenu_min/max, fourchette_actions_min/max).
