@@ -1,0 +1,241 @@
+<title>Mon portefeuille — maquette</title>
+<style>
+  :root{
+    --ink:#0F2334; --ink-2:#1B3245; --paper:#F6F4EF; --paper-2:#FFFFFF;
+    --brass:#C99A4B; --brass-deep:#A87C33; --teal:#2C7A6B;
+    --pos:#2E7D53; --neg:#B4472F;
+    --tx:#12232F; --tx-soft:#4C5B64; --line:#E2DCD0; --card:#FFFFFF; --ground:#F6F4EF;
+    --shadow:0 1px 2px rgba(16,35,52,.06),0 8px 24px rgba(16,35,52,.06);
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --r-rev-1:#1E5A7A; --r-rev-2:#2C7A6B; --r-rev-3:#3E8EA6; --r-rev-4:#6BB0BE; --r-rev-5:#93C7CC;
+    --r-act-1:#A87C33; --r-act-2:#C99A4B; --r-act-3:#8FA83E; --r-act-4:#C77B3C; --r-act-5:#9E5E2E; --r-act-6:#B7503F; --r-act-7:#6E8B3D; --r-act-8:#D8B570;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --tx:#EAECEE; --tx-soft:#9FB0BC; --line:#243A4C; --card:#132738; --ground:#0C1B29; --paper:#0C1B29; --paper-2:#132738; --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35); }
+  }
+  :root[data-theme="light"]{ --tx:#12232F; --tx-soft:#4C5B64; --line:#E2DCD0; --card:#FFFFFF; --ground:#F6F4EF; }
+  :root[data-theme="dark"]{ --tx:#EAECEE; --tx-soft:#9FB0BC; --line:#243A4C; --card:#132738; --ground:#0C1B29; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--tx);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px 64px}
+  /* top bar */
+  .topbar{background:var(--ink);color:#EAF0F4;position:sticky;top:0;z-index:20;border-bottom:1px solid rgba(255,255,255,.08)}
+  .topbar .inner{max-width:1080px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .brand{font-family:var(--serif);font-size:19px;letter-spacing:.3px;display:flex;align-items:center;gap:9px}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--brass)}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto}
+  .chip{appearance:none;border:1px solid rgba(255,255,255,.16);background:transparent;color:#CBD8E1;
+    padding:7px 13px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;transition:.18s;font-family:var(--sans)}
+  .chip:hover{border-color:var(--brass);color:#fff}
+  .chip[aria-selected="true"]{background:var(--brass);border-color:var(--brass);color:#22160A}
+  .chip:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+  /* hero */
+  .hero{padding:34px 0 8px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--brass-deep)}
+  .hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(28px,4.4vw,42px);margin:.28em 0 .1em;text-wrap:balance;line-height:1.08}
+  .hero p.lede{font-size:16px;color:var(--tx-soft);max-width:64ch;margin:.4em 0 0}
+  .badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .badge{display:flex;flex-direction:column;gap:2px;padding:10px 15px;border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:var(--shadow)}
+  .badge .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx-soft);font-weight:700}
+  .badge .v{font-family:var(--serif);font-size:20px}
+  .badge .v .u{font-size:13px;color:var(--tx-soft)}
+  .badge.rev .v{color:var(--r-rev-1)} .badge.act .v{color:var(--brass-deep)} .badge.obj .v{color:var(--teal)}
+  /* section */
+  section h2{font-family:var(--serif);font-weight:600;font-size:22px;margin:38px 0 4px}
+  .sub{color:var(--tx-soft);font-size:14px;margin:0 0 18px}
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--brass)}
+  .kpi .h{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx-soft)}
+  .kpi .n{font-family:var(--serif);font-size:34px;font-variant-numeric:tabular-nums;margin-top:6px;letter-spacing:-.5px}
+  .kpi .n .pct{font-size:17px;color:var(--tx-soft);margin-left:1px}
+  .kpi .n.pos{color:var(--pos)} .kpi .n.neg{color:var(--neg)}
+  .kpi small{display:block;color:var(--tx-soft);font-size:11.5px;margin-top:3px}
+  /* composition */
+  .comp{display:grid;grid-template-columns:300px 1fr;gap:30px;align-items:center}
+  .donut-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .donut{position:relative;width:250px;height:250px}
+  .donut svg{transform:rotate(-90deg)}
+  .donut .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+  .donut .center .lab{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx-soft);font-weight:700}
+  .donut .center .split{font-family:var(--serif);font-size:26px;margin-top:2px}
+  .donut .center .split .rev{color:var(--r-rev-1)} .donut .center .split .act{color:var(--brass-deep)}
+  .legend{display:flex;flex-direction:column;gap:2px}
+  .lg-group-t{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--tx-soft);margin:8px 0 4px}
+  .lg{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:9px;cursor:default;transition:.15s}
+  .lg:hover,.lg.hot{background:color-mix(in srgb,var(--brass) 12%,transparent)}
+  .lg .sw{width:12px;height:12px;border-radius:3px;flex:0 0 auto}
+  .lg .nm{font-size:13.5px;flex:1;min-width:0}
+  .lg .wt{font-variant-numeric:tabular-nums;font-weight:700;font-size:13.5px}
+  /* table */
+  .tbl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);background:var(--card)}
+  table{width:100%;border-collapse:collapse;min-width:640px}
+  th,td{text-align:left;padding:12px 14px;font-size:13.5px;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx-soft);background:color-mix(in srgb,var(--ground) 60%,var(--card))}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr.hot{background:color-mix(in srgb,var(--brass) 9%,transparent)}
+  .fnm{font-weight:600} .frole{color:var(--tx-soft);font-size:12.5px;margin-top:2px;max-width:52ch}
+  .tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-top:5px}
+  .tag.rev{background:color-mix(in srgb,var(--r-rev-1) 16%,transparent);color:var(--r-rev-1)}
+  .tag.act{background:color-mix(in srgb,var(--brass) 20%,transparent);color:var(--brass-deep)}
+  .pos{color:var(--pos)} .neg{color:var(--neg)}
+  /* context */
+  .ctx{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:14px;padding:22px 24px;box-shadow:var(--shadow)}
+  .ctx p{margin:0;font-size:15px;max-width:72ch}
+  .foot{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:var(--tx-soft);font-size:12px}
+  .disc{font-style:italic}
+  @media (max-width:720px){ .kpis{grid-template-columns:repeat(2,1fr)} .comp{grid-template-columns:1fr} }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="topbar"><div class="inner">
+  <div class="brand"><span class="dot"></span> Mon portefeuille</div>
+  <div class="chips" id="chips" role="tablist" aria-label="Profils d'investisseur"></div>
+</div></div>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow" id="eyebrow">Profil modéré</div>
+    <h1 id="titre">Portefeuille Modéré</h1>
+    <p class="lede" id="resume"></p>
+    <div class="badges">
+      <div class="badge rev"><span class="k">Revenu</span><span class="v" id="b-rev"></span></div>
+      <div class="badge act"><span class="k">Actions</span><span class="v" id="b-act"></span></div>
+      <div class="badge obj"><span class="k">Objectif de rendement</span><span class="v" id="b-obj"></span></div>
+    </div>
+  </header>
+
+  <section>
+    <h2>Rendement moyen du portefeuille</h2>
+    <p class="sub">Moyenne pondérée des rendements nets des fonds qui composent le portefeuille (données au 30 juin 2025).</p>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section>
+    <h2>Composition</h2>
+    <p class="sub">Répartition par fonds. Survolez un fonds pour le repérer dans la liste.</p>
+    <div class="comp">
+      <div class="donut-wrap">
+        <div class="donut"><svg id="donut" width="250" height="250" viewBox="0 0 250 250"></svg>
+          <div class="center"><span class="lab">Revenu / Actions</span><span class="split" id="d-split"></span></div>
+        </div>
+      </div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Fonds sélectionnés</h2>
+    <p class="sub">Le rôle de chaque fonds et ses rendements nets (1, 3, 5 et 10 ans).</p>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Fonds</th><th class="num">Poids</th><th class="num">1 an</th><th class="num">3 ans</th><th class="num">5 ans</th><th class="num">10 ans</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Pourquoi ce portefeuille</h2>
+    <p class="sub">Analyse de conjoncture au moment du rééquilibrage.</p>
+    <div class="ctx"><p id="ctx"></p></div>
+  </section>
+
+  <div class="foot">
+    <p>Dernier rééquilibrage : <strong id="f-date"></strong>.</p>
+    <p class="disc">Ce portefeuille est un modèle fourni à titre indicatif et ne constitue pas un conseil en placement personnalisé. Les rendements passés ne garantissent pas les rendements futurs. Communiquez avec votre conseiller avant toute décision.</p>
+  </div>
+</div>
+
+<script>
+const DATA = [{"profil": "prudent", "titre": "Portefeuille Prudent", "resume": "Sécurité du capital et revenu régulier, avec une petite part d'actions de qualité pour un léger potentiel de croissance.", "cr": 75, "ca": 25, "cible_rendement": "3 à 4 %", "moy": {"1an": 7.82, "3ans": 5.95, "5ans": 4.12, "10ans": 3.47}, "contexte": "Au moment de ce rééquilibrage (juillet 2026), le taux directeur de la Banque du Canada est stable à 2,25 %, l'inflation de base tourne autour de 2 % (l'inflation globale, à ~3,2 %, est surtout tirée par le pétrole) et la croissance économique demeure modérée. Les tensions géopolitiques au Moyen-Orient et l'incertitude commerciale entretiennent la volatilité, tandis que les rendements obligataires sont légèrement plus élevés et que les marchés boursiers ont rebondi. Ce portefeuille privilégie donc des obligations de sociétés et de courte durée (moins sensibles aux taux), une bonne diversification mondiale et une exposition aux infrastructures comme protection contre l'inflation.", "date": "2026-07-14", "fonds": [{"code": "070", "nom": "Marché monétaire (iA)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 10, "role": "Coussin de liquidités sécuritaire; profite du taux monétaire actuel (~2,4 %) sans risque de fluctuation.", "gest": "iA Gestion mondiale d'actifs", "r1": 2.44, "r3": 2.81, "r5": 1.72, "r10": 1.07}, {"code": "170", "nom": "Obligations court terme (iA)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 20, "role": "Obligations de courte durée, peu sensibles aux mouvements de taux — approprié dans le contexte de taux encore élevés.", "gest": "iA Gestion mondiale d'actifs", "r1": 4.65, "r3": 3.02, "r5": 0.26, "r10": 0.38}, {"code": "762", "nom": "Spécialisés Stratégie d'obligations de sociétés (iA)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 25, "role": "Obligations de sociétés de qualité : rendement supérieur aux obligations gouvernementales, durée plus courte.", "gest": "iA Gestion mondiale d'actifs", "r1": 5.52, "r3": 5.31, "r5": 4.21, "r10": 2.75}, {"code": "605", "nom": "Obligations mondiales multisectorielles (Loomis Sayles)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 20, "role": "Diversification obligataire mondiale et multisectorielle pour réduire la dépendance au marché canadien.", "gest": "Loomis, Sayles & Company", "r1": 6.19, "r3": 2.73, "r5": -0.13, "r10": null}, {"code": "515", "nom": "Dividendes croissance (iA)", "cat": "Fonds d'actions canadiennes", "classe": "Actions", "poids": 15, "role": "Actions canadiennes de dividendes en croissance : revenu et stabilité, volatilité plus faible que le marché.", "gest": "iA Gestion mondiale d'actifs", "r1": 18.31, "r3": 10.21, "r5": 12.1, "r10": 7.34}, {"code": "876", "nom": "Indiciel mondial tous pays (BlackRock)", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 10, "role": "Cœur d'actions mondiales indiciel, à faible coût, pour une diversification géographique large.", "gest": "BlackRock", "r1": 12.79, "r3": 16.59, "r5": 10.57, "r10": 8.08}]}, {"profil": "modéré", "titre": "Portefeuille Modéré", "resume": "Croissance modérée du capital avec une base obligataire dominante et des revenus relativement stables.", "cr": 60, "ca": 40, "cible_rendement": "4 à 6 %", "moy": {"1an": 8.9, "3ans": 8.47, "5ans": 5.81, "10ans": 5.13}, "contexte": "Au moment de ce rééquilibrage (juillet 2026), le taux directeur de la Banque du Canada est stable à 2,25 %, l'inflation de base tourne autour de 2 % (l'inflation globale, à ~3,2 %, est surtout tirée par le pétrole) et la croissance économique demeure modérée. Les tensions géopolitiques au Moyen-Orient et l'incertitude commerciale entretiennent la volatilité, tandis que les rendements obligataires sont légèrement plus élevés et que les marchés boursiers ont rebondi. Ce portefeuille privilégie donc des obligations de sociétés et de courte durée (moins sensibles aux taux), une bonne diversification mondiale et une exposition aux infrastructures comme protection contre l'inflation.", "date": "2026-07-14", "fonds": [{"code": "170", "nom": "Obligations court terme (iA)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 15, "role": "Obligations courtes, tampon défensif contre la volatilité des taux.", "gest": "iA Gestion mondiale d'actifs", "r1": 4.65, "r3": 3.02, "r5": 0.26, "r10": 0.38}, {"code": "762", "nom": "Spécialisés Stratégie d'obligations de sociétés (iA)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 20, "role": "Obligations de sociétés de qualité, moteur de revenu principal.", "gest": "iA Gestion mondiale d'actifs", "r1": 5.52, "r3": 5.31, "r5": 4.21, "r10": 2.75}, {"code": "605", "nom": "Obligations mondiales multisectorielles (Loomis Sayles)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 15, "role": "Obligations mondiales multisectorielles pour diversifier les sources de revenu.", "gest": "Loomis, Sayles & Company", "r1": 6.19, "r3": 2.73, "r5": -0.13, "r10": null}, {"code": "893", "nom": "Revenu fixe mondial (PIMCO)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 10, "role": "Revenu fixe mondial (PIMCO) : gestion active flexible dans un contexte de taux incertain.", "gest": "PIMCO", "r1": 5.62, "r3": 4.41, "r5": 1.79, "r10": 1.84}, {"code": "515", "nom": "Dividendes croissance (iA)", "cat": "Fonds d'actions canadiennes", "classe": "Actions", "poids": 12, "role": "Actions canadiennes de dividendes : revenu et participation à la croissance avec moins de volatilité.", "gest": "iA Gestion mondiale d'actifs", "r1": 18.31, "r3": 10.21, "r5": 12.1, "r10": 7.34}, {"code": "180", "nom": "Indiciel américain (BlackRock)", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 13, "role": "Indiciel américain, cœur d'actions du plus grand marché mondial, à faible coût.", "gest": "BlackRock", "r1": 11.49, "r3": 18.42, "r5": 13.31, "r10": 11.33}, {"code": "876", "nom": "Indiciel mondial tous pays (BlackRock)", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 15, "role": "Actions mondiales indicielles pour une exposition diversifiée hors Canada.", "gest": "BlackRock", "r1": 12.79, "r3": 16.59, "r5": 10.57, "r10": 8.08}]}, {"profil": "équilibré", "titre": "Portefeuille Équilibré", "resume": "Équilibre entre revenu et croissance, diversifié mondialement, pour une appréciation à moyen et long terme.", "cr": 55, "ca": 45, "cible_rendement": "5 à 6 %", "moy": {"1an": 10.43, "3ans": 8.84, "5ans": 6.07, "10ans": 5.32}, "contexte": "Au moment de ce rééquilibrage (juillet 2026), le taux directeur de la Banque du Canada est stable à 2,25 %, l'inflation de base tourne autour de 2 % (l'inflation globale, à ~3,2 %, est surtout tirée par le pétrole) et la croissance économique demeure modérée. Les tensions géopolitiques au Moyen-Orient et l'incertitude commerciale entretiennent la volatilité, tandis que les rendements obligataires sont légèrement plus élevés et que les marchés boursiers ont rebondi. Ce portefeuille privilégie donc des obligations de sociétés et de courte durée (moins sensibles aux taux), une bonne diversification mondiale et une exposition aux infrastructures comme protection contre l'inflation.", "date": "2026-07-14", "fonds": [{"code": "762", "nom": "Spécialisés Stratégie d'obligations de sociétés (iA)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 20, "role": "Obligations de sociétés de qualité, base de revenu stable.", "gest": "iA Gestion mondiale d'actifs", "r1": 5.52, "r3": 5.31, "r5": 4.21, "r10": 2.75}, {"code": "605", "nom": "Obligations mondiales multisectorielles (Loomis Sayles)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 20, "role": "Obligations mondiales multisectorielles, diversification et gestion active de la durée.", "gest": "Loomis, Sayles & Company", "r1": 6.19, "r3": 2.73, "r5": -0.13, "r10": null}, {"code": "893", "nom": "Revenu fixe mondial (PIMCO)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 15, "role": "Revenu fixe mondial (PIMCO), flexibilité face aux taux.", "gest": "PIMCO", "r1": 5.62, "r3": 4.41, "r5": 1.79, "r10": 1.84}, {"code": "010", "nom": "Actions nord-américaines (iA)", "cat": "Fonds d'actions canadiennes", "classe": "Actions", "poids": 15, "role": "Actions nord-américaines de grandes sociétés : cœur canadien et américain.", "gest": "iA Gestion mondiale d'actifs", "r1": 17.71, "r3": 15.37, "r5": 13.32, "r10": 7.29}, {"code": "180", "nom": "Indiciel américain (BlackRock)", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 12, "role": "Indiciel américain, exposition au moteur de croissance mondial.", "gest": "BlackRock", "r1": 11.49, "r3": 18.42, "r5": 13.31, "r10": 11.33}, {"code": "300", "nom": "Indiciel international (BlackRock)", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 10, "role": "Indiciel international (hors Amérique du Nord) pour diversifier les régions.", "gest": "BlackRock", "r1": 14.35, "r3": 15.16, "r5": 8.39, "r10": 4.78}, {"code": "085", "nom": "Infrastructures mondiales (Dynamique)", "cat": "Fonds spécialisés", "classe": "Actions", "poids": 8, "role": "Infrastructures mondiales : actifs réels générant des revenus, protection contre l'inflation.", "gest": "Fonds Dynamique", "r1": 22.13, "r3": 6.74, "r5": 6.88, "r10": 6.22}]}, {"profil": "croissance", "titre": "Portefeuille Croissance", "resume": "Croissance supérieure à la moyenne, à dominante actions mondiales diversifiées, avec une base obligataire réduite.", "cr": 30, "ca": 70, "cible_rendement": "6 à 8 %", "moy": {"1an": 12.69, "3ans": 12.21, "5ans": 8.54, "10ans": 6.96}, "contexte": "Au moment de ce rééquilibrage (juillet 2026), le taux directeur de la Banque du Canada est stable à 2,25 %, l'inflation de base tourne autour de 2 % (l'inflation globale, à ~3,2 %, est surtout tirée par le pétrole) et la croissance économique demeure modérée. Les tensions géopolitiques au Moyen-Orient et l'incertitude commerciale entretiennent la volatilité, tandis que les rendements obligataires sont légèrement plus élevés et que les marchés boursiers ont rebondi. Ce portefeuille privilégie donc des obligations de sociétés et de courte durée (moins sensibles aux taux), une bonne diversification mondiale et une exposition aux infrastructures comme protection contre l'inflation.", "date": "2026-07-14", "fonds": [{"code": "762", "nom": "Spécialisés Stratégie d'obligations de sociétés (iA)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 15, "role": "Obligations de sociétés de qualité : stabilité et amortisseur de volatilité.", "gest": "iA Gestion mondiale d'actifs", "r1": 5.52, "r3": 5.31, "r5": 4.21, "r10": 2.75}, {"code": "605", "nom": "Obligations mondiales multisectorielles (Loomis Sayles)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 15, "role": "Obligations mondiales multisectorielles pour diversifier le volet défensif.", "gest": "Loomis, Sayles & Company", "r1": 6.19, "r3": 2.73, "r5": -0.13, "r10": null}, {"code": "010", "nom": "Actions nord-américaines (iA)", "cat": "Fonds d'actions canadiennes", "classe": "Actions", "poids": 15, "role": "Actions nord-américaines, cœur du portefeuille d'actions.", "gest": "iA Gestion mondiale d'actifs", "r1": 17.71, "r3": 15.37, "r5": 13.32, "r10": 7.29}, {"code": "180", "nom": "Indiciel américain (BlackRock)", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 15, "role": "Indiciel américain, exposition au principal marché de croissance.", "gest": "BlackRock", "r1": 11.49, "r3": 18.42, "r5": 13.31, "r10": 11.33}, {"code": "707", "nom": "Actions mondiales (iA)", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 15, "role": "Actions mondiales gérées activement pour capter les occasions mondiales.", "gest": "iA Gestion mondiale d'actifs", "r1": 14.01, "r3": 17.85, "r5": 11.68, "r10": 8.0}, {"code": "300", "nom": "Indiciel international (BlackRock)", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 12, "role": "Indiciel international pour élargir la diversification géographique.", "gest": "BlackRock", "r1": 14.35, "r3": 15.16, "r5": 8.39, "r10": 4.78}, {"code": "085", "nom": "Infrastructures mondiales (Dynamique)", "cat": "Fonds spécialisés", "classe": "Actions", "poids": 8, "role": "Infrastructures mondiales : revenus et protection contre l'inflation.", "gest": "Fonds Dynamique", "r1": 22.13, "r3": 6.74, "r5": 6.88, "r10": 6.22}, {"code": "921", "nom": "Fidelity Actions mondiales - Concentré", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 5, "role": "Actions mondiales concentrées (Fidelity) : convictions fortes, potentiel de surperformance.", "gest": "Fidelity Investments", "r1": 19.14, "r3": 18.01, "r5": 12.5, "r10": 8.71}]}, {"profil": "audacieux", "titre": "Portefeuille Audacieux", "resume": "Croissance maximale du capital, presque entièrement en actions mondiales diversifiées, pour un horizon long et une forte tolérance au risque.", "cr": 15, "ca": 85, "cible_rendement": "8 à 10 %", "moy": {"1an": 13.05, "3ans": 14.11, "5ans": 9.05, "10ans": 8.34}, "contexte": "Au moment de ce rééquilibrage (juillet 2026), le taux directeur de la Banque du Canada est stable à 2,25 %, l'inflation de base tourne autour de 2 % (l'inflation globale, à ~3,2 %, est surtout tirée par le pétrole) et la croissance économique demeure modérée. Les tensions géopolitiques au Moyen-Orient et l'incertitude commerciale entretiennent la volatilité, tandis que les rendements obligataires sont légèrement plus élevés et que les marchés boursiers ont rebondi. Ce portefeuille privilégie donc des obligations de sociétés et de courte durée (moins sensibles aux taux), une bonne diversification mondiale et une exposition aux infrastructures comme protection contre l'inflation.", "date": "2026-07-14", "fonds": [{"code": "605", "nom": "Obligations mondiales multisectorielles (Loomis Sayles)", "cat": "Fonds de revenu", "classe": "Revenu", "poids": 15, "role": "Unique volet défensif : obligations mondiales pour amortir légèrement la volatilité.", "gest": "Loomis, Sayles & Company", "r1": 6.19, "r3": 2.73, "r5": -0.13, "r10": null}, {"code": "180", "nom": "Indiciel américain (BlackRock)", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 20, "role": "Indiciel américain, plus forte pondération, moteur principal de croissance.", "gest": "BlackRock", "r1": 11.49, "r3": 18.42, "r5": 13.31, "r10": 11.33}, {"code": "707", "nom": "Actions mondiales (iA)", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 18, "role": "Actions mondiales gérées activement, cœur diversifié du portefeuille.", "gest": "iA Gestion mondiale d'actifs", "r1": 14.01, "r3": 17.85, "r5": 11.68, "r10": 8.0}, {"code": "876", "nom": "Indiciel mondial tous pays (BlackRock)", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 15, "role": "Actions mondiales indicielles tous pays, diversification à faible coût.", "gest": "BlackRock", "r1": 12.79, "r3": 16.59, "r5": 10.57, "r10": 8.08}, {"code": "300", "nom": "Indiciel international (BlackRock)", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 12, "role": "Indiciel international pour l'exposition hors Amérique du Nord.", "gest": "BlackRock", "r1": 14.35, "r3": 15.16, "r5": 8.39, "r10": 4.78}, {"code": "921", "nom": "Fidelity Actions mondiales - Concentré", "cat": "Fonds d'actions américaines et internationales", "classe": "Actions", "poids": 10, "role": "Actions mondiales concentrées (Fidelity) : convictions fortes.", "gest": "Fidelity Investments", "r1": 19.14, "r3": 18.01, "r5": 12.5, "r10": 8.71}, {"code": "085", "nom": "Infrastructures mondiales (Dynamique)", "cat": "Fonds spécialisés", "classe": "Actions", "poids": 5, "role": "Infrastructures mondiales : actifs réels, protection contre l'inflation.", "gest": "Fonds Dynamique", "r1": 22.13, "r3": 6.74, "r5": 6.88, "r10": 6.22}, {"code": "084", "nom": "Marchés émergents (Jarislowsky Fraser)", "cat": "Fonds spécialisés", "classe": "Actions", "poids": 5, "role": "Marchés émergents : potentiel de croissance supplémentaire à long terme.", "gest": "Jarislowsky Fraser Limitée", "r1": 12.78, "r3": 7.16, "r5": 2.45, "r10": null}]}];
+const REV=['--r-rev-1','--r-rev-2','--r-rev-3','--r-rev-4','--r-rev-5'];
+const ACT=['--r-act-1','--r-act-2','--r-act-3','--r-act-4','--r-act-5','--r-act-6','--r-act-7','--r-act-8'];
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function colorFor(f,i,ri,ai){ return f.classe==='Revenu'?REV[ri%REV.length]:ACT[ai%ACT.length]; }
+function fmt(v){ return v==null?'—':(v>0?'+':'')+v.toFixed(2); }
+
+function assignColors(p){
+  let ri=0,ai=0; p.fonds.forEach(f=>{ f._c = f.classe==='Revenu'?REV[ri++%REV.length]:ACT[ai++%ACT.length]; });
+}
+function render(p){
+  assignColors(p);
+  document.getElementById('eyebrow').textContent='Profil '+p.profil;
+  document.getElementById('titre').textContent=p.titre;
+  document.getElementById('resume').textContent=p.resume;
+  document.getElementById('b-rev').innerHTML=p.cr+'<span class="u"> %</span>';
+  document.getElementById('b-act').innerHTML=p.ca+'<span class="u"> %</span>';
+  document.getElementById('b-obj').textContent=p.cible_rendement;
+  document.getElementById('d-split').innerHTML='<span class="rev">'+p.cr+'</span> / <span class="act">'+p.ca+'</span>';
+  document.getElementById('f-date').textContent=p.date;
+  document.getElementById('ctx').textContent=p.contexte;
+  // KPIs
+  const k=document.getElementById('kpis'); k.innerHTML='';
+  [['1an','1 an'],['3ans','3 ans'],['5ans','5 ans'],['10ans','10 ans']].forEach(([key,lab])=>{
+    const v=p.moy[key]; const cls=v==null?'':(v>=0?'pos':'neg');
+    k.insertAdjacentHTML('beforeend',
+      `<div class="kpi"><div class="h">${lab}</div><div class="n ${cls}">${v==null?'—':v.toFixed(2)}<span class="pct">%</span></div><small>annualisé, moy. pondérée</small></div>`);
+  });
+  // donut
+  const svg=document.getElementById('donut'); svg.innerHTML='';
+  const cx=125,cy=125,r=92,sw=34,C=2*Math.PI*r; let off=0;
+  p.fonds.forEach((f,i)=>{
+    const frac=f.poids/100, len=frac*C;
+    const cir=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    cir.setAttribute('cx',cx);cir.setAttribute('cy',cy);cir.setAttribute('r',r);
+    cir.setAttribute('fill','none');cir.setAttribute('stroke',css(f._c));cir.setAttribute('stroke-width',sw);
+    cir.setAttribute('stroke-dasharray',`${len} ${C-len}`);cir.setAttribute('stroke-dashoffset',-off);
+    cir.style.transition='opacity .15s'; cir.dataset.i=i;
+    cir.addEventListener('mouseenter',()=>hot(i,true));
+    cir.addEventListener('mouseleave',()=>hot(i,false));
+    svg.appendChild(cir); off+=len;
+  });
+  // legend grouped
+  const lg=document.getElementById('legend'); lg.innerHTML='';
+  ['Revenu','Actions'].forEach(cl=>{
+    const items=p.fonds.map((f,i)=>({f,i})).filter(o=>o.f.classe===cl);
+    if(!items.length) return;
+    const tot=items.reduce((s,o)=>s+o.f.poids,0);
+    lg.insertAdjacentHTML('beforeend',`<div class="lg-group-t">${cl} · ${tot} %</div>`);
+    items.forEach(({f,i})=>{
+      const el=document.createElement('div'); el.className='lg'; el.dataset.i=i;
+      el.innerHTML=`<span class="sw" style="background:${css(f._c)}"></span><span class="nm">${f.nom}</span><span class="wt">${f.poids} %</span>`;
+      el.addEventListener('mouseenter',()=>hot(i,true)); el.addEventListener('mouseleave',()=>hot(i,false));
+      lg.appendChild(el);
+    });
+  });
+  // table
+  const tb=document.getElementById('tbody'); tb.innerHTML='';
+  p.fonds.forEach((f,i)=>{
+    const tag=f.classe==='Revenu'?'rev':'act';
+    tb.insertAdjacentHTML('beforeend',
+    `<tr data-i="${i}">
+      <td><div class="fnm">${f.nom}</div><div class="frole">${f.role}</div><span class="tag ${tag}">${f.classe} · ${f.cat||''}</span></td>
+      <td class="num"><strong>${f.poids} %</strong></td>
+      <td class="num ${cls(f.r1)}">${fmt(f.r1)}</td>
+      <td class="num ${cls(f.r3)}">${fmt(f.r3)}</td>
+      <td class="num ${cls(f.r5)}">${fmt(f.r5)}</td>
+      <td class="num ${cls(f.r10)}">${fmt(f.r10)}</td>
+    </tr>`);
+  });
+  tb.querySelectorAll('tr').forEach(tr=>{const i=+tr.dataset.i;
+    tr.addEventListener('mouseenter',()=>hot(i,true)); tr.addEventListener('mouseleave',()=>hot(i,false));});
+}
+function cls(v){ return v==null?'':(v>=0?'pos':'neg'); }
+function hot(i,on){
+  document.querySelectorAll(`#donut circle`).forEach(c=>{c.style.opacity = on ? (+c.dataset.i===i?'1':'.32') : '1';});
+  document.querySelectorAll(`.lg[data-i="${i}"], #tbody tr[data-i="${i}"]`).forEach(e=>e.classList.toggle('hot',on));
+}
+// chips
+const chips=document.getElementById('chips');
+DATA.forEach((p,i)=>{
+  const b=document.createElement('button'); b.className='chip'; b.role='tab'; b.textContent=cap(p.profil);
+  b.setAttribute('aria-selected', i===1?'true':'false');
+  b.addEventListener('click',()=>{ chips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-selected','false'));
+    b.setAttribute('aria-selected','true'); render(p); window.scrollTo({top:0,behavior:'smooth'}); });
+  chips.appendChild(b);
+});
+render(DATA[1]); // modéré par défaut (comme l'exemple)
+</script>

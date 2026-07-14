@@ -50,7 +50,13 @@
         "poids": 10,
         "role": "Cœur d'actions mondiales indiciel, à faible coût, pour une diversification géographique large."
       }
-    ]
+    ],
+    "rendements_moyens": {
+      "1an": 7.82,
+      "3ans": 5.95,
+      "5ans": 4.12,
+      "10ans": 3.47
+    }
   },
   {
     "profil": "modéré",
@@ -110,7 +116,13 @@
         "poids": 15,
         "role": "Actions mondiales indicielles pour une exposition diversifiée hors Canada."
       }
-    ]
+    ],
+    "rendements_moyens": {
+      "1an": 8.9,
+      "3ans": 8.47,
+      "5ans": 5.81,
+      "10ans": 5.13
+    }
   },
   {
     "profil": "équilibré",
@@ -170,7 +182,13 @@
         "poids": 8,
         "role": "Infrastructures mondiales : actifs réels générant des revenus, protection contre l'inflation."
       }
-    ]
+    ],
+    "rendements_moyens": {
+      "1an": 10.43,
+      "3ans": 8.84,
+      "5ans": 6.07,
+      "10ans": 5.32
+    }
   },
   {
     "profil": "croissance",
@@ -237,7 +255,13 @@
         "poids": 5,
         "role": "Actions mondiales concentrées (Fidelity) : convictions fortes, potentiel de surperformance."
       }
-    ]
+    ],
+    "rendements_moyens": {
+      "1an": 12.69,
+      "3ans": 12.21,
+      "5ans": 8.54,
+      "10ans": 6.96
+    }
   },
   {
     "profil": "audacieux",
@@ -304,6 +328,12 @@
         "poids": 5,
         "role": "Marchés émergents : potentiel de croissance supplémentaire à long terme."
       }
-    ]
+    ],
+    "rendements_moyens": {
+      "1an": 13.05,
+      "3ans": 14.11,
+      "5ans": 9.05,
+      "10ans": 8.34
+    }
   }
 ]
